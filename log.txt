@@ -1,0 +1,47 @@
+>Embeddings
+En-De: weighted averaging https://github.com/pedrada88/crossembeddings-twitter
+
+>Datasets
+EN: SemEval13-16 (7689 neg/22189 neu/19606 pos)
+DE: SB-10k (989 neg/4131 neu/1509 pos)
+DE: CLARIN (download pending)
+
+>Tweet cleansing
+1) removed Not Available ones
+2) contractions are kept (own embeddings)
+3) hashtags kept (might express sentiment)
+4) all lowercase
+5) removed @mentions/links
+6) emoticon conversion (all mapped to English expressions as these words have embs in the joint BWE)
+https://towardsdatascience.com/twitter-sentiment-analysis-using-fasttext-9ccd04465597
+7) removed punctuation
+
+>Experiments
+1) fixed [En BWE], testing on De directly (sanity check for overlapping words)
+2) fixed [EnDe BWE]
+3) update [EnDe BWE] by training as follows
+  a) model1 with trainable [EnDe BWE], train on En, test on En
+  b) model2 with trainable [EnDe BWE], train on De, test on De
+4) combining 2) and 3)
+5) possibly improving architecture (e.g. adding a Conv layer) to achieve better results
+
+>Experiment settings (M-monolingual, B-bilingual)
+M1: En train (27000, val 0.1) / En test (3000), EmbLayer
+M2: En train (27000, val 0.1) / En test (3000), En BWE fixed
+M3: En train (27000, val 0.1) / En test (3000), En BWE trainable
+
+setting MAXLEN  dropout dense     batch  epoch  micro-F1
+M1      30      0.5     2*64      32      3     70.72
+M2      30      0.5     2*64      32      5     63.96
+M2      30      0.5     2*64      32      3     62.41
+M3      30      0.5     2*64      32      3     70.98
+M3      30      0.5     2*64      32      5     70.78
+M3      30      0.5     2*128     32      5     70.76
+M3      30      0.2     2*128     32      3     70.70
+M3      30      0.2     2*64      32      3     70.48
+
+
+>Issues to address
+1) Tokenizer does not recognize De vocabs
+  - fit_on_texts on both train(En) and test(De)
+2) training only with En -> De embs not updated
