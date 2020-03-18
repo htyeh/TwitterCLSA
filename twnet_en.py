@@ -109,7 +109,7 @@ gold = y_test
 predicted = model.predict(x_test).argmax(axis=1)
 utils.test_evaluation(gold, predicted)
 
-toy_sents = tokenizer.texts_to_sequences(['this morning I had a terrible pancake that I hated', 'wow what a great movie', 'you better not come again', 'terrible, worst ever', 'best film ever', 'today is Tuesday'])
+toy_sents = tokenizer.texts_to_sequences(['the cat sat on the mat', 'wow what a great movie', 'better not come again', 'terrible, worst ever', 'best film ever', 'today is Tuesday'])
 toy_data = pad_sequences(toy_sents, maxlen=MAXLEN)
 prediction = model.predict(toy_data)
 print(prediction.argmax(axis=1))
