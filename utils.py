@@ -1,23 +1,31 @@
 import string
+import os
+import tqdm
+import numpy as np
+import matplotlib.pyplot as plt
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras import backend as K
-import numpy as np
-import matplotlib.pyplot as plt
-import tqdm
 
-def clean_texts(sents):
-    clean_lists = []
-    for sent in sents:
-        tokens = [word.lower() for word in word_tokenize(sent)]
-        table = str.maketrans('', '', string.punctuation)
-        tokens = [word.translate(table) for word in tokens]
-        sw = set(stopwords.words('english'))
-        words = [word for word in tokens if word.isalpha() and word not in sw]
-        clean_lists.append(words)
-    return clean_lists
+def load_data(dir_path):
+    texts = []
+    labels = []
+    for label_file in ['neg.tsv', 'neu.tsv', 'pos.tsv']:
+        file_path = os.path.join(dir_path, label_file)
+        print('loading ' + file_path + '...')
+        with open(file_path) as f:
+            for line in f:
+                id, polarity, text = [item.strip() for item in line.split('\t')]
+                texts.append(text)
+                if polarity.lower() == 'negative':
+                    labels.append(0)
+                elif polarity.lower() == 'neutral':
+                    labels.append(1)
+                elif polarity.lower() == 'positive':
+                    labels.append(2)
+    return texts, labels
 
 def vectorize(texts, labels, max_words, maxlen):
     print('transforming into vectors...')
@@ -35,7 +43,7 @@ def vectorize(texts, labels, max_words, maxlen):
 # usage: data, labels, vocab_size = vectorize(texts, labels, MAX_WORDS, MAXLEN)
 
 def shuffle(data, labels):
-    print('shuffling data...')
+    print('shuffling...')
     indices = np.arange(data.shape[0])
     np.random.shuffle(indices)
     data = data[indices]
@@ -157,3 +165,14 @@ def plot(history):
     plt.ylabel('Loss')
     plt.legend()
     plt.show()
+
+# def clean_texts(sents):
+#     clean_lists = []
+#     for sent in sents:
+#         tokens = [word.lower() for word in word_tokenize(sent)]
+#         table = str.maketrans('', '', string.punctuation)
+#         tokens = [word.translate(table) for word in tokens]
+#         sw = set(stopwords.words('english'))
+#         words = [word for word in tokens if word.isalpha() and word not in sw]
+#         clean_lists.append(words)
+#     return clean_lists

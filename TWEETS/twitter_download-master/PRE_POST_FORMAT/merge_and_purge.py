@@ -1,5 +1,7 @@
 #!/usr/local/bin/python3
 
+# purges repeating and Not Available lines
+
 uniq_ids = []
 available_lines = []
 with open('downloaded.tsv') as downloaded:
@@ -10,6 +12,6 @@ with open('downloaded.tsv') as downloaded:
             available_lines.append(line)
 print(len(available_lines))
 
-with open('mozetic_de_pos.tsv', 'w') as output:
+with open('mozetic_en_pos_neu.tsv', 'w') as output:
     for line in available_lines:
         output.write(line)

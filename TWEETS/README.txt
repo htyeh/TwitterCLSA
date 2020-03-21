@@ -6,3 +6,4 @@ FULL:
 
 CLEAN:
   cleansed versions of the ones in FULL
+  dev & test sets should be kept the same for all experiments for each language
