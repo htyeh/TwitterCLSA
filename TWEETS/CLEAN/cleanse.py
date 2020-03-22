@@ -65,11 +65,15 @@ def clean_tweet(tweet):
         tweet = tweet.lower()
         tweet = ' '.join(re.sub("(\w+:\/\/\S+)", " ", tweet).split())
         tweet = ' '.join(re.sub("(@[A-Za-z0-9]+)", " ", tweet).split())
+        # tweet = re.sub(u"(\u2018|\u2019)", "'", tweet)
+        # tweet = re.sub(u"\u002c", ",", tweet)
         tweet = ' '.join([emoticon_dict[word] if word in emoticon_dict else word for word in tweet.split()])
         tweet = ' '.join(re.sub("[\.\,\!\?\:\;\-\=\"]", " ", tweet).split())
         return tweet
 
-# cp full files from FULL/ first
+test_tweet = '@MelmurMel @PBandJenelley_1 @vl_delp_ham_ Jenelle lies\u002c1st she said she was alone &the hosp.now she\u2019s saying how weird it was for Keiffer\u2019s'
+
+# cp files from FULL/ first
 files_to_clean = [file for file in os.listdir('.') if file.endswith('.tsv')]
 print('cleansing:', ', '.join(files_to_clean))
 for original_file in files_to_clean:
@@ -82,14 +86,3 @@ for original_file in files_to_clean:
         with open('clean_' + original_file, 'w') as out_file:
                 for line in clean_lines:
                         out_file.write(line)
-
-
-# max_len = 0
-# en_files = [file for file in os.listdir('.') if file.startswith('en')]
-# for file in en_files:
-#     with open(file) as en_file:
-#         for line in en_file:
-#             res = [ele.strip() for ele in line.split('\t')]
-#             if len(res[2].split()) > max_len:
-#                 max_len = len(res[2].split())
-# print(max_len)

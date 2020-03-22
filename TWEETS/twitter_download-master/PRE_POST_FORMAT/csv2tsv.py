@@ -1,6 +1,6 @@
 import csv
 
-with open('Mozetic_DE.csv','r') as csvin, open('Mozetic_DE.tsv', 'w') as tsvout:
+with open('ES_COST.csv','r') as csvin, open('ES_COST.tsv', 'w') as tsvout:
     csvin = csv.reader(csvin)
     tsvout = csv.writer(tsvout, delimiter='\t')
 
