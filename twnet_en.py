@@ -21,7 +21,7 @@ de_test_texts, de_test_labels = utils.load_data(de_test_dir)
 # train_test_texts = train_texts + test_texts
 
 # MAX_WORDS = 30000
-MAXLEN = 10    # max tweet word count
+MAXLEN = 30    # max tweet word count
 EMBEDDING_DIM = 100
 
 # vectorize texts
@@ -36,7 +36,7 @@ train_sequences = tokenizer.texts_to_sequences(train_texts)
 dev_sequences = tokenizer.texts_to_sequences(dev_texts)
 test_sequences = tokenizer.texts_to_sequences(test_texts)
 de_test_sequences = tokenizer.texts_to_sequences(de_test_texts)
-print('unique tokens found in tokenizer: ' + str(vocab_size - 1))
+print('unique tokens in tokenizer: ' + str(vocab_size - 1))
 print('padding to ' + str(MAXLEN) + ' words each...')
 train_data = pad_sequences(train_sequences, maxlen=MAXLEN)
 dev_data = pad_sequences(dev_sequences, maxlen=MAXLEN)
@@ -77,27 +77,29 @@ print(x_test2[:3])
 print(y_test2[:3])
 
 # load pre-trained embeddings (specify the embedding dimension)
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
+embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/crosslingual_EN-DE_english_twitter_100d_weighted.txt.w2v')
 
 num_embedding_vocab = vocab_size
-# embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=num_embedding_vocab, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
+embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=num_embedding_vocab, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
 
 # build model
 model = models.Sequential()
-model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
-# model.add(layers.Embedding(num_embedding_vocab, EMBEDDING_DIM, weights=[embedding_matrix], trainable=False, input_length=MAXLEN))
-model.add(layers.Bidirectional(layers.LSTM(128)))
-# model.add(layers.LSTM(64))
-model.add(layers.Dropout(0.5))
-# model.add(layers.Flatten())
-model.add(layers.Dense(64, activation='relu'))
+# model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
+model.add(layers.Embedding(num_embedding_vocab, EMBEDDING_DIM, weights=[embedding_matrix], trainable=False, input_length=MAXLEN))
+model.add(layers.Bidirectional(layers.LSTM(256)))
+# model.add(layers.Dropout(0.4))
+model.add(layers.Dense(512, activation='relu'))
+model.add(layers.Dropout(0.2))
+model.add(layers.Dense(512, activation='relu'))
+model.add(layers.Dropout(0.2))
+model.add(layers.Dense(128, activation='relu'))
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(3, activation='softmax'))
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
-es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0.5, patience=15, restore_best_weights=True, verbose=1)
+es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0.5, patience=30, restore_best_weights=True, verbose=1)
 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=8, epochs=100, shuffle=True, callbacks=[es, mc])
+history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=32, epochs=100, shuffle=True, callbacks=[es, mc])
 print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
 
 # test_loss, test_acc = model.evaluate(x_test, y_test)

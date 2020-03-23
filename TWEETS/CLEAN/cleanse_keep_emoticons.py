@@ -6,7 +6,7 @@ emoticon_dict = {":-)": "smiley", ":-]": "smiley", ":-3": "smiley", ":->": "smil
 
 def clean_tweet(tweet):
     tweet = tweet.lower()
-    tweet = ' '.join([word.strip('.,!?:;-="') if word not in emoticon_dict else word for word in tweet.split()])
+    # tweet = ' '.join([word.strip('.,!?:;-="') if word not in emoticon_dict else word for word in tweet.split()])
     tweet = ' '.join(re.sub("(\w+:\/\/\S+)", " ", tweet).split())
     tweet = ' '.join(re.sub("(@[A-Za-z0-9]+)", " ", tweet).split())
     return tweet

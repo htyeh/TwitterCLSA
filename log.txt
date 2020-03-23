@@ -22,6 +22,7 @@ for CLARIN balanced: removed the last a few thousand Tweets from neutral train/d
 4) all lowercase
 5) removed @mentions/links
 6) emoticon conversion (all mapped to English expressions as these words have embs in the joint BWE)
+* Keras Tokenizer does not encode emoticons
 https://towardsdatascience.com/twitter-sentiment-analysis-using-fasttext-9ccd04465597
 7) removed punctuation (after emoticon conversion they can be deleted also from between two words e.g. '...')
 8) converted \u2019 (to '), \u002c (to ,)
@@ -75,16 +76,23 @@ M2      30      256     -     0.5       2*128   -         16      11    60.33   
 >Experiments using CLARIN En balanced (12422 neg/13000 neu/13453 pos)
 * best epoch num reported by Callback
 * - means did not implement
-setting MAXLEN  bilstm  dropout dense     batch  epoch  F1(En)    F1(De)
-M1      30      64      0.5     2*128     32      1     57.14     -
-M1      30      128     0.5     2*128     32      1     60.71     -
-M1      30      256     0.9     2*128     32      1     56.61     -
-M1      30      256     0.5     2*128     32      1     59.03     -
-M1      30      256     0.2     2*128     32      1     60.78     -
-M1      30      128     0.5     2*256     32      1     59.81     -
-Z1      10      64      0.5     2*32      8       1     57.75     45.52
-Z1      10      128     0.5     2*64      8       1     56.99     48.02
-Z1      10      128     0.5     2*128     8       1     58.09     ?
+setting MAXLEN  bilstm  dropout dense     dropouts  batch  epoch  F1(En)    F1(De)
+M1      30      64      0.5     2*128     -         32      1     57.14     -
+M1      30      128     0.5     2*128     -         32      1     60.71     -
+M1      30      256     0.9     2*128     -         32      1     56.61     -
+M1      30      256     0.5     2*128     -         32      1     59.03     -
+M1      30      256     0.2     2*128     -         32      1     60.78     -
+M1      30      128     0.5     2*256     -         32      1     59.81     -
+Z1      10      64      0.5     2*32      -         8       1     57.75     45.52
+Z1      10      128     0.5     2*64      -         8       1     56.99     48.02
+Z1      10      128     0.5     2*128     -         8       1     58.09     ?
+Z1      10      128     0.5     2*128     -         16      1     57.72     49.17
+Z1      30      128     0.5     2*128     -         16      1     59.78     50.45
+Z1      30      256     0.5     256+128   -         16      1     58.13     49.52
+Z1      30      256     -       256+128   0.4,-     32      5     59.20     61.13
+Z1      30      256     -       3*128     0.4,0.4,- 32      5     57.82     59.40
+Z1      30      128     -       128+64    0.4,-     32      10    57.63     54.95
+
 M2      30      128     0.2     2*128     8       4     57.70     -
 Z2      10      -       -       1*128     16      2     57.02     59.10
 Z2      10      -       -       3*128     16      1     57.04     60.36
