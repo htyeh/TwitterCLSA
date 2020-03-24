@@ -10,10 +10,14 @@ DE: SB-10k (989 neg/4131 neu/1509 pos)
 DE: SB-10k balanced used for zero-shot testing (989 neg/~1500 neu/1509 pos)
 DE: CLARIN.si (13853 neg/42174 neu/19489 pos)
 
+>Datasets in use
+Train: balanced CLARIN En 8696 neg/9000 neu/9415 pos
+Dev: imbalanced CLARIN En 1863 neg/3555 neu/2019 pos
+Test: imbalanced CLARIN En 1863 neg/3555 neu/2019 pos
+Test: imbalanced De 989 neg/4131 neu/1509 pos
+
 >Data split
-for CLARIN: 70% train, take last 15%/15% as dev/test
-for SemEval+CLARIN 70/15/15
-for CLARIN balanced: removed the last a few thousand Tweets from neutral train/dev/test Tweets
+70/15/15 (last 30% Tweets taken directly for dev & test)
 
 >Tweet cleansing
 1) removed Not Available ones
@@ -42,10 +46,58 @@ https://towardsdatascience.com/twitter-sentiment-analysis-using-fasttext-9ccd044
 >Experiment settings (M-monolingual, C-classical transfer, Z-zero-shot transfer)
 M1: En train/dev/test, EmbLayer
 M2: En train/dev/test, [EnDe BWE] fixed
-M3: En train (27000, val 0.1) / En test (3000), [EnDe BWE] trainable
+M3: En train/dev/test [EnDe BWE] trainable
 Z1: En train/dev/test, EmbLayer; De test (zero-shot)
 Z2: En train/dev/test, [EnDe BWE] fixed; De test (zero-shot)
+Z3: M3: En train/dev/test [EnDe BWE] trainable; De test (zero-shot)
 
+>Experiments using CLARIN En balanced (12422 neg/13000 neu/13453 pos)
+* best epoch num reported by Callback
+* - means did not implement
+setting MAXLEN  bilstm  dropout dense     dropouts  batch  epoch  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z1      30      32      -       2*64      -         32      1     57.46         62.80         57.94         46.96
+Z1      30      64      -       2*64      -         32      1     54.50         60.28         54.71         48.84
+Z1      30      64      -       2*128     -         32
+Z1      30      128     -       2*128     -         32
+Z1      10      64      0.5     2*32      -         8       1     57.75         ?
+Z1      10      128     0.5     2*64      -         8       1     56.99         ?
+Z1      10      128     0.5     2*128     -         16      1     57.72         ?
+Z1      30      128     0.5     2*128     -         16      1     59.78         ?
+Z1      30      256     0.5     256+128   -         16      1     58.13         ?
+setting MAXLEN  bilstm  dropout dense     dropouts  batch  epoch  F1(En)    F1(De)
+Z2      10      -       -       1*128     -         16      2     57.02     59.10
+Z2      10      -       -       3*128     -         16      1     57.04     60.36
+Z2      30      32      -       2*32      0.4,-     32      6     58.41     59.12
+Z2      30      32      -       2*64      0.4,-     32      7     59.41     60.86
+Z2      30      64      -       2*64      0.4,-     32      8     60.00     60.72
+Z2      30      64      -       2*128     0.4,-     32      7     60.05     60.82
+Z2      30      128     -       2*128     0.4,-     32      5     60.37     61.76
+Z2      30      256     -       256+128   0.4,-     32      5     59.98     61.63
+Z2      30      256     -       2*256     0.4,-     32      7     60.75     62.62
+Z2      30      256     0.1     2*256     0.2,-     32      7     59.86     60.82
+
+Z2      10      128     0.5     4*32      -         32      9     56.77     58.55
+Z2      10      256     0.5     4*64      -         32      6     56.75     58.80
+Z2      10      512     0.5     2*128     -         16      7     55.63     55.90
+Z2      30      128     0.1     2*128     -,-       32      2     60.21     59.54
+
+Z2      30      128     0.1     2*256     0.4,-     32      2     58.09     59.38
+Z2      30      128     0.1     128+64    0.4,0.2   32      10    58.83     59.38
+Z2      30      128     0.1     128+64    0.4,-     32      7     61.18     64.26
+Z2      30      128     0.1     128+64    0.2,-     32      5     59.69     60.28
+Z2      30      128     0.1     2*128     0.4,-     32      10    60.35     63.10
+Z2      30      128     0.1     64+64     0.4,-     32      7     60.64     62.50
+
+
+>Issues to address
+1) Tokenizer does not recognize De vocabs
+  - fit_on_texts on both train(En) and test(De)
+2) training only with En -> De embs not updated
+
+
+
+
+>>Older results
 >Experiments using CLARIN En imbalanced (12422 neg/23700 neu/13453 pos)
 * best epoch num reported by Callback
 * - means did not implement
@@ -72,42 +124,3 @@ M2      30      128     -     0.5       2*64    -         16      11    59.94   
 M2      30      128     -     0.5       2*128   -         8       8     61.03     -
 M2      30      128     -     0.2       2*128   -         8       4     60.56     -
 M2      30      256     -     0.5       2*128   -         16      11    60.33     -
-
->Experiments using CLARIN En balanced (12422 neg/13000 neu/13453 pos)
-* best epoch num reported by Callback
-* - means did not implement
-setting MAXLEN  bilstm  dropout dense     dropouts  batch  epoch  F1(En)    F1(De)
-M1      30      64      0.5     2*128     -         32      1     57.14     -
-M1      30      128     0.5     2*128     -         32      1     60.71     -
-M1      30      256     0.9     2*128     -         32      1     56.61     -
-M1      30      256     0.5     2*128     -         32      1     59.03     -
-M1      30      256     0.2     2*128     -         32      1     60.78     -
-M1      30      128     0.5     2*256     -         32      1     59.81     -
-Z1      10      64      0.5     2*32      -         8       1     57.75     45.52
-Z1      10      128     0.5     2*64      -         8       1     56.99     48.02
-Z1      10      128     0.5     2*128     -         8       1     58.09     ?
-Z1      10      128     0.5     2*128     -         16      1     57.72     49.17
-Z1      30      128     0.5     2*128     -         16      1     59.78     50.45
-Z1      30      256     0.5     256+128   -         16      1     58.13     49.52
-Z1      30      256     -       256+128   0.4,-     32      5     59.20     61.13
-Z1      30      256     -       3*128     0.4,0.4,- 32      5     57.82     59.40
-Z1      30      128     -       128+64    0.4,-     32      10    57.63     54.95
-
-M2      30      128     0.2     2*128     8       4     57.70     -
-Z2      10      -       -       1*128     16      2     57.02     59.10
-Z2      10      -       -       3*128     16      1     57.04     60.36
-Z2      10      128     0.5     4*32      32      9     56.77     58.55
-Z2      10      256     0.5     4*64      32      6     56.75     58.80
-Z2      10      512     0.5     2*128     16      7     55.63     55.90
-
-
->Experiments using SemEval En balanced
-* best epoch # reported by Callback
-setting MAXLEN  bilstm  dropout dense     batch  epoch  F1(En)    F1(De)
-
-
-
->Issues to address
-1) Tokenizer does not recognize De vocabs
-  - fit_on_texts on both train(En) and test(De)
-2) training only with En -> De embs not updated

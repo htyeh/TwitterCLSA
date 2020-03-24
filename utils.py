@@ -77,8 +77,8 @@ def build_emb_matrix(num_embedding_vocab, embedding_dim, word_index, embeddings_
 
 def test_evaluation(gold, predicted):
     # gold = y_test; predicted = model.predict(x_test)
-    print('sample gold:', gold[:20])
-    print('sample pred:', predicted[:20])
+    print('sample gold:', gold[:30])
+    print('sample pred:', predicted[:30])
     true_positives = {0: 0, 1: 0, 2: 0}
     false_positives = {0: 0, 1: 0, 2: 0}
     false_negatives = {0: 0, 1: 0, 2: 0}
@@ -113,11 +113,11 @@ def test_evaluation(gold, predicted):
         micro_precision = 0.00001
         micro_recall = 0.00001
     micro_f1 = 2 * (micro_precision * micro_recall) / (micro_precision + micro_recall)
-    print('macro precision:', macro_precision)
-    print('macro recall:', macro_recall)
+    # print('macro precision:', macro_precision)
+    # print('macro recall:', macro_recall)
     print('macro F1:', macro_f1)
-    print('micro precision:', micro_precision)
-    print('micro recall:', micro_recall)
+    # print('micro precision:', micro_precision)
+    # print('micro recall:', micro_recall)
     print('micro F1:', micro_f1)
 
 # def micro_f1(gold, predicted):
