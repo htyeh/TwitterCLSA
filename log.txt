@@ -1,34 +1,39 @@
 >Embeddings
 En-De: weighted averaging from https://github.com/pedrada88/crossembeddings-twitter
 
->Available datasets
-EN: SemEval13-16 (7689 neg/22189 neu/19606 pos)
-EN: SemEval13-16 balanced (10000 neg/10000 neu/ 10000 pos)
-EN: CLARIN.si (12422 neg/23700 neu/13453 pos)
-EN: CLARIN.si balanced (12422 neg/~13000 neu/13453 pos)
+>Links to datasets
+SemEval: https://www.dropbox.com/s/byzr8yoda6bua1b/2017_English_final.zip?
+CLARIN: https://www.clarin.si/repository/xmlui/handle/11356/1054
+SB-10K: link: https://www.spinningbytes.com/resources/germansentiment/
+
+>Available datasets (neg/neu/pos)
+EN: SemEval13-16 full (train 5383/15533/13724; dev 1153/3328/2941; test 1153/3328/2941)
+EN: SemEval13-16 balanced (upsampling) (train 14079/15533/13724; dev 1153/3328/2941; test 1153/3328/2941) * merged with CLARIN neg train
+EN: SemEval13-16 balanced (downsampling) (train 5383/6000/6000; dev 1153/3328/2941; test 1153/3328/2941)
+EN: CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+EN: CLARIN.si balanced (train 8696/9000/9415; dev 1863/3555/2019; test 1863/3555/2019)
+DE: CLARIN.si full (test 2078/6326/2923)
 DE: SB-10k (989 neg/4131 neu/1509 pos)
-DE: SB-10k balanced used for zero-shot testing (989 neg/~1500 neu/1509 pos)
-DE: CLARIN.si (13853 neg/42174 neu/19489 pos)
+DE: SB-10k balanced (989 neg/1500 neu/1509 pos)
 
 >Datasets in use
 Train: balanced CLARIN En 8696 neg/9000 neu/9415 pos
 Dev: imbalanced CLARIN En 1863 neg/3555 neu/2019 pos
 Test: imbalanced CLARIN En 1863 neg/3555 neu/2019 pos
-Test: imbalanced De 989 neg/4131 neu/1509 pos
+Test: imbalanced SB-10k De 989 neg/4131 neu/1509 pos
 
 >Data split
 70/15/15 (last 30% Tweets taken directly for dev & test)
 
 >Tweet cleansing
-1) removed Not Available ones
+1) removed 'Not Available' ones
 2) contractions are kept (own embeddings)
-3) hashtags kept (might express sentiment)
-4) all lowercase
+3) hashtags kept (might contain sentiment info)
+4) to lowercase
 5) removed @mentions/links
-6) emoticon conversion (all mapped to English expressions as these words have embs in the joint BWE)
-* Keras Tokenizer does not encode emoticons
+6) emoticon conversion (Keras Tokenizer does not encode emoticons; all mapped to English expressions acc. following link)
 https://towardsdatascience.com/twitter-sentiment-analysis-using-fasttext-9ccd04465597
-7) removed punctuation (after emoticon conversion they can be deleted also from between two words e.g. '...')
+7) punctuation removal
 8) converted \u2019 (to '), \u002c (to ,)
 
 >Experiments
@@ -52,18 +57,47 @@ ZM: En train/dev/test, [En BWE]; De test (zero-shot) -> De vocab should have all
 Z2: En train/dev/test, [EnDe BWE] fixed; De test (zero-shot)
 Z3: M3: En train/dev/test [EnDe BWE] trainable; De test (zero-shot)
 
->Experiments using CLARIN En balanced (12422 neg/13000 neu/13453 pos) and De imbalanced (989 neg/4131 neu/1509 pos)
-* best epoch num reported by Callback
-* - means did not implement
-following tests evaluated with balanced En/De test sets
-setting MAXLEN  bilstm  dropout dense     dropouts  batch  epoch  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-Z1      10      64      0.5     2*32      -         8       1     57.75         45.52         -             -
-Z1      10      128     0.5     2*64      -         8       1     56.99         48.02         -             -
-Z1      10      128     0.5     2*128     -         16      1     57.72         49.17         -             -
-Z1      30      128     0.5     2*128     -         16      1     59.78         50.45         -             -
-Z1      30      256     0.5     256+128   -         16      1     58.13         49.52         -             -
+---------------------------------------------------------------------------------------------------------------------------------
+>> comparing raw & processed data
+>SemEval En full train (5383 neg/15533 neu/13724 pos), dev (1153 neg/3328 neu/2941 pos), test (1153 neg/3328 neu/2941 pos)
+>De CLARIN full test (2078 neg/6326 neu/2923 pos)
+cleansed  setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Y         Z1      30      128     0.2     2*64      -         64    1     62.14         52.14         57.69         34.79
+Y         ZM      30      128     0.2     2*64      -         64    8     63.66         51.02         59.17         40.55
+Y         Z2      30      128     0.2     2*64      -         64    7     64.16         51.26         60.48         50.23
+N         Z1      30      128     0.2     2*64      -         64    1     62.19         55.15         54.32         28.28
+N         ZM      30      128     0.2     2*64      -         64    7     63.35         52.53         59.75         40.85
+N         Z2      30      128     0.2     2*64      -         64    8     63.60         51.67         59.69         49.73
+---------------------------------------------------------------------------------------------------------------------------------
+>> comparing balanced & imbalanced train data
+>SemEval En balanced(up) train (14079 neg/15533 neu/13724 pos); full dev (1153 neg/3328 neu/2941 pos), test (1153 neg/3328 neu/2941 pos)
+>De CLARIN full test (2078 neg/6326 neu/2923 pos)
+balanced  setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Y         Z1      30      128     0.2     2*64      -         64    1     60.13         22.58         56.72         17.25
+Y         ZM
+Y         Z2
+N         Z1      30      128     0.2     2*64      -         64    1     62.14         52.14         57.69         34.79
+N         ZM      30      128     0.2     2*64      -         64    8     63.66         51.02         59.17         40.55
+N         Z2      30      128     0.2     2*64      -         64    7     64.16         51.26         60.48         50.23
+---------------------------------------------------------------------------------------------------------------------------------
+>> comparing balanced & imbalanced train data
+>SemEval En balanced(down) train (5383 neg/6000 neu/6000 pos); full dev (1153 neg/3328 neu/2941 pos), test (1153 neg/3328 neu/2941 pos)
+>De CLARIN full test (2078 neg/6326 neu/2923 pos)
+balanced  setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Y         Z1      30      128     0.2     2*64      -         64    1     49.20         42.18         48.42         31.41
+N         Z1      30      128     0.2     2*64      -         64    1     62.14         52.14         57.69         34.79
+N         ZM      30      128     0.2     2*64      -         64    8     63.66         51.02         59.17         40.55
+N         Z2      30      128     0.2     2*64      -         64    7     64.16         51.26         60.48         50.23
+---------------------------------------------------------------------------------------------------------------------------------
+>CLARIN En balanced train (8696 neg/9000 neu/9415 pos); imbalanced dev (1863 neg/3555 neu/2019 pos), test (1863 neg/3555 neu/2019 pos)
+>De Clarin imbalanced test (2078 neg/6326 neu/2923 pos)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z1      30      128     0.2     2*64      -         64    1     55.91         49.46         56.07         35.17
 
-the rest evaluated with full (imbalanced) En/De test sets
+---------------------------------------------------------------------------------------------------------------------------------
+
+>CLARIN En balanced train (8696 neg/9000 neu/9415 pos); imbalanced dev (1863 neg/3555 neu/2019 pos), test (1863 neg/3555 neu/2019 pos)
+>DE_10k imbalanced test (989 neg/4131 neu/1509 pos)
 setting MAXLEN  bilstm  dropout dense     dropouts  batch  epoch  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 Z1      30      32      -       2*64      -         32      1     57.46         62.80         57.94         46.96
 Z1      30      64      0.5     2*64      -         32      1     55.43         60.90         55.63         48.05

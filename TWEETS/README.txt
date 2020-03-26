@@ -1,7 +1,7 @@
 ORIGINAL_DOWNLOADS:
   unprocessed/unclassified
 
-FULL:
+RAW:
   unavailable Tweets filtered, formatted as tsv files
 
 CLEAN:
