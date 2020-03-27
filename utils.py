@@ -67,8 +67,8 @@ def build_emb_matrix(num_embedding_vocab, embedding_dim, word_index, embeddings_
     print('building embedding matrix with %s words...' % num_embedding_vocab)
     embedding_matrix = np.zeros((num_embedding_vocab, embedding_dim))
     for word, i in word_index.items():
-        # if i >= MAX_WORDS:                  # leave out if word too rare
-            # continue
+        if i >= num_embedding_vocab:        # leave out if word too rare
+            continue
         embedding_vector = embeddings_index.get(word)
         if embedding_vector is not None:    # otherwise embedding = all 0
             embedding_matrix[i] = embedding_vector

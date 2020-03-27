@@ -1,18 +1,25 @@
 #!/usr/local/bin/python3
 import os
 import sys
-from keras import models
-from keras import layers
+from sklearn.feature_extraction.text import TfidfVectorizer
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
-from keras.utils import to_categorical
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.layers import Dense, Input, LSTM, Embedding, Dropout, Activation, Conv1D, GRU, CuDNNGRU, CuDNNLSTM, BatchNormalization
+from keras.layers import Bidirectional, GlobalMaxPool1D, MaxPooling1D, Add, Flatten
+from keras.layers import GlobalAveragePooling1D, GlobalMaxPooling1D, concatenate, SpatialDropout1D
+from keras.models import Model, load_model
+from keras import initializers, regularizers, constraints, optimizers, layers, callbacks
+from keras import backend as K
+from keras.engine import InputSpec, Layer
+from keras.optimizers import Adam
+from keras.callbacks import ModelCheckpoint, TensorBoard, Callback, EarlyStopping
+import tensorflow as tf
 import numpy as np
 import utils
 
-train_dir = './TWEETS/CLEAN/EN_CLARIN_balanced/train'
-dev_dir = './TWEETS/CLEAN/EN_CLARIN_imbalanced/dev'
-test_dir = './TWEETS/CLEAN/EN_CLARIN_imbalanced/test'
+train_dir = './TWEETS/CLEAN/SemEval_imbalanced/train'
+dev_dir = './TWEETS/CLEAN/SemEval_imbalanced/dev'
+test_dir = './TWEETS/CLEAN/SemEval_imbalanced/test'
 de_test_dir = './TWEETS/CLEAN/DE_CLARIN_imbalanced/test'
 train_texts, train_labels = utils.load_data(train_dir)
 dev_texts, dev_labels = utils.load_data(dev_dir)
@@ -26,8 +33,6 @@ EMBEDDING_DIM = 100
 # vectorize texts
 print('transforming into vectors...')
 tokenizer = Tokenizer()
-
-# tokenizer.fit_on_texts(train_texts)
 tokenizer.fit_on_texts(train_texts + dev_texts + test_texts + de_test_texts)
 
 vocab_size = len(tokenizer.word_index) + 1      # +UNK
@@ -81,21 +86,54 @@ embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
 embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
 
 # build model
-model = models.Sequential()
-# model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
-model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=False, input_length=MAXLEN))
-# model.add(layers.Conv1D(128, 2, padding='same', activation='relu'))
-# model.add(layers.MaxPooling1D(2))
-model.add(layers.Bidirectional(layers.LSTM(128)))
-model.add(layers.Dropout(0.2))
-model.add(layers.Dense(64, activation='relu'))
-model.add(layers.Dense(64, activation='relu'))
-model.add(layers.Dense(3, activation='softmax'))
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
-es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
-mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
-print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
+def build_model1(lr=0.0, lr_d=0.0, units=0, spatial_dr=0.0, kernel_size1=3, kernel_size2=2, dense_units=128, dr=0.1, conv_size=32):
+    file_path = "best_model.hdf5"
+    check_point = ModelCheckpoint(file_path, monitor = "val_loss", verbose = 1,
+                                  save_best_only = True, mode = "min")
+    early_stop = EarlyStopping(monitor = "val_loss", mode = "min", patience = 3)
+    
+    inp = Input(shape = (MAXLEN,))
+    x = Embedding(vocab_size, EMBEDDING_DIM, weights = [embedding_matrix], trainable = False)(inp)
+    x1 = SpatialDropout1D(spatial_dr)(x)
+
+    x_gru = Bidirectional(GRU(units, return_sequences = True))(x1)
+    x1 = Conv1D(conv_size, kernel_size=kernel_size1, padding='valid', kernel_initializer='he_uniform')(x_gru)
+    avg_pool1_gru = GlobalAveragePooling1D()(x1)
+    max_pool1_gru = GlobalMaxPooling1D()(x1)
+    
+    x3 = Conv1D(conv_size, kernel_size=kernel_size2, padding='valid', kernel_initializer='he_uniform')(x_gru)
+    avg_pool3_gru = GlobalAveragePooling1D()(x3)
+    max_pool3_gru = GlobalMaxPooling1D()(x3)
+    
+    x_lstm = Bidirectional(LSTM(units, return_sequences = True))(x1)
+    x1 = Conv1D(conv_size, kernel_size=kernel_size1, padding='valid', kernel_initializer='he_uniform')(x_lstm)
+    avg_pool1_lstm = GlobalAveragePooling1D()(x1)
+    max_pool1_lstm = GlobalMaxPooling1D()(x1)
+    
+    x3 = Conv1D(conv_size, kernel_size=kernel_size2, padding='valid', kernel_initializer='he_uniform')(x_lstm)
+    avg_pool3_lstm = GlobalAveragePooling1D()(x3)
+    max_pool3_lstm = GlobalMaxPooling1D()(x3)
+    
+    
+    x = concatenate([avg_pool1_gru, max_pool1_gru, avg_pool3_gru, max_pool3_gru,
+                    avg_pool1_lstm, max_pool1_lstm, avg_pool3_lstm, max_pool3_lstm])
+    x = BatchNormalization()(x)
+    x = Dropout(dr)(Dense(dense_units, activation='relu') (x))
+    x = BatchNormalization()(x)
+    x = Dropout(dr)(Dense(int(dense_units / 2), activation='relu') (x))
+    x = Dense(3, activation = "softmax")(x)
+    model = Model(inputs = inp, outputs = x)
+    # model.compile(loss="sparse_categorical_crossentropy", optimizer=Adam(lr=lr, decay=lr_d), metrics=["accuracy"])
+    model.compile(loss="sparse_categorical_crossentropy", optimizer='adam', metrics=["accuracy"])
+
+    history = model.fit(x_train, y_train, batch_size = 32, epochs = 100, validation_data=(x_val, y_val), 
+                        verbose = 1, shuffle=True, callbacks = [check_point, early_stop])
+    model = load_model(file_path)
+    return model
+
+model = build_model1(lr = 1e-3, lr_d = 1e-10, units = 128, spatial_dr = 0.5, kernel_size1=4, kernel_size2=4, dense_units=64, dr=0.2, conv_size=32)
+
+
 
 # test_loss, test_acc = model.evaluate(x_test, y_test)
 # print('test loss:', test_loss, 'test acc:', test_acc)

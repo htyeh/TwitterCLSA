@@ -57,72 +57,93 @@ ZM: En train/dev/test, [En BWE]; De test (zero-shot) -> De vocab should have all
 Z2: En train/dev/test, [EnDe BWE] fixed; De test (zero-shot)
 Z3: M3: En train/dev/test [EnDe BWE] trainable; De test (zero-shot)
 
----------------------------------------------------------------------------------------------------------------------------------
->> comparing raw & processed data
->SemEval En full train (5383 neg/15533 neu/13724 pos), dev (1153 neg/3328 neu/2941 pos), test (1153 neg/3328 neu/2941 pos)
->De CLARIN full test (2078 neg/6326 neu/2923 pos)
-cleansed  setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-Y         Z1      30      128     0.2     2*64      -         64    1     62.14         52.14         57.69         34.79
-Y         ZM      30      128     0.2     2*64      -         64    8     63.66         51.02         59.17         40.55
-Y         Z2      30      128     0.2     2*64      -         64    7     64.16         51.26         60.48         50.23
-N         Z1      30      128     0.2     2*64      -         64    1     62.19         55.15         54.32         28.28
-N         ZM      30      128     0.2     2*64      -         64    7     63.35         52.53         59.75         40.85
-N         Z2      30      128     0.2     2*64      -         64    8     63.60         51.67         59.69         49.73
----------------------------------------------------------------------------------------------------------------------------------
->> comparing balanced & imbalanced train data
->SemEval En balanced(up) train (14079 neg/15533 neu/13724 pos); full dev (1153 neg/3328 neu/2941 pos), test (1153 neg/3328 neu/2941 pos)
->De CLARIN full test (2078 neg/6326 neu/2923 pos)
-balanced  setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  pred. comment
-Y         Z1      30      128     0.2     2*64      -         64    1     60.30         23.96         57.20         18.84         De neg-skewed
-Y         ZM      30      128     0.2     2*64      -         64    6     62.49         24.95         59.60         22.10         De neg-skewed
-Y         Z2      30      128     0.2     2*64      -         64    5     62.76         29.67         57.18         29.01         De neg-skewed
-N         Z1      30      128     0.2     2*64      -         64    1     62.14         52.14         57.69         34.79         De neu-skewed
-N         ZM      30      128     0.2     2*64      -         64    8     63.66         51.02         59.17         40.55
-N         Z2      30      128     0.2     2*64      -         64    7     64.16         51.26         60.48         50.23
----------------------------------------------------------------------------------------------------------------------------------
->> comparing balanced & imbalanced train data
->SemEval En balanced(up) train (14079 neg/15533 neu/13724 pos); full dev (1153 neg/3328 neu/2941 pos), test (1153 neg/3328 neu/2941 pos)
->De SB-10k full test (989 neg/4131 neu/1509 pos)
-balanced  setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  pred. comment
-Y         Z1      30      128     0.2     2*64      -         64    1     59.11         23.29         57.00         19.05         De neg-skewed
-Y         ZM      30      128     0.2     2*64      -         64    8     64.23         23.00         60.41         21.29         De neg-skewed
-Y         Z2      30      128     0.2     2*64      -         64    6     64.17         25.33         60.45         25.22         De neg-skewed
-N         Z1      30      128     0.2     2*64      -         64    1     62.14         52.14         57.69         34.79
-N         ZM      30      128     0.2     2*64      -         64    8     63.66         51.02         59.17         40.55
-N         Z2      30      128     0.2     2*64      -         64    7     64.16         51.26         60.48         50.23
----------------------------------------------------------------------------------------------------------------------------------
->> comparing balanced & imbalanced train data
->SemEval En balanced(down) train (5383 neg/6000 neu/6000 pos); full dev (1153 neg/3328 neu/2941 pos), test (1153 neg/3328 neu/2941 pos)
->De CLARIN full test (2078 neg/6326 neu/2923 pos)
-balanced  setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-Y         Z1      30      128     0.2     2*64      -         64    1     49.20         42.18         48.42         31.41
-Y         ZM      30      128     0.2     2*64      -         64    4     57.67         46.51         56.09         41.06
-Y         Z2      30      128     0.2     2*64      -         64    9     58.36         46.43         57.21         46.77
-N         Z1      30      128     0.2     2*64      -         64    1     62.14         52.14         57.69         34.79
-N         ZM      30      128     0.2     2*64      -         64    8     63.66         51.02         59.17         40.55
-N         Z2      30      128     0.2     2*64      -         64    7     64.16         51.26         60.48         50.23
----------------------------------------------------------------------------------------------------------------------------------
->CLARIN En balanced train (8696 neg/9000 neu/9415 pos); imbalanced dev (1863 neg/3555 neu/2019 pos), test (1863 neg/3555 neu/2019 pos)
->De Clarin imbalanced test (2078 neg/6326 neu/2923 pos)
+-------------------------------------------------------------------------------------------------------------------------------------------
+<model architecture: bilstm(128) + dropout(0.2) + dense(64) + dense(64)> <batch=64> <setting=Z2>
+train           dev             test(En)      test(De)      F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  pred. comment
+SemEval(full)   SemEval(full)   SemEval(full) CLARIN(full)  64.16         51.26         60.48         50.23
+SemEval(upsamp) SemEval(full)   SemEval(full) CLARIN(full)  62.76         29.67         57.18         29.01         De neg-skewed
+SemEval(upsamp) SemEval(full)   SemEval(full) SB-10k(full)  64.17         25.33         60.45         25.22         De neg-skewed
+SemEval(downsamp) SemEval(full) SemEval(full) CLARIN(full)  58.36         46.43         57.21         46.77
+CLARIN(full)    CLARIN(full)    CLARIN(full)  CLARIN(full)
+CLARIN(balanced)  CLARIN(full)  CLARIN(full)  CLARIN(full)  59.83         51.38         59.39         50.20
+-------------------------------------------------------------------------------------------------------------------------------------------
+<model architecture: Medium post (https://medium.com/@panghalarsh/sentiment-analysis-in-python-using-keras-glove-twitter-word-embeddings-and-deep-rnn-on-a-combined-580646cb900a)> <batch=64> <setting=Z2>
+train           dev             test(En)      test(De)      F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  pred. comment
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> (uncleansed) SemEval full train (5383 neg/15533 neu/13724 pos)
+<EN> (uncleansed) SemEval full dev (1153 neg/3328 neu/2941 pos)
+<EN> (uncleansed) SemEval full test (1153 neg/3328 neu/2941 pos)
+<DE> (uncleansed) CLARIN full test (2078 neg/6326 neu/2923 pos)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z1      30      128     0.2     2*64      -         64    1     62.19         55.15         54.32         28.28
+ZM      30      128     0.2     2*64      -         64    7     63.35         52.53         59.75         40.85
+Z2      30      128     0.2     2*64      -         64    8     63.60         51.67         59.69         49.73
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> SemEval full train (5383 neg/15533 neu/13724 pos)
+<EN> SemEval full dev (1153 neg/3328 neu/2941 pos)
+<EN> SemEval full test (1153 neg/3328 neu/2941 pos)
+<DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
+Z1      30      128     0.2     2*64      -         64    1     62.14         52.14         57.69         34.79
+ZM      30      128     0.2     2*64      -         64    8     63.66         51.02         59.17         40.55
+Z2      30      128     0.2     2*64      -         64    7     64.16         51.26         60.48         50.23
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> SemEval balanced train (upsampled w/ CLARIN neg train) (14079 neg/15533 neu/13724 pos)
+<EN> SemEval full dev (1153 neg/3328 neu/2941 pos)
+<EN> SemEval full test (1153 neg/3328 neu/2941 pos)
+<DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  pred. comment
+Z1      30      128     0.2     2*64      -         64    1     60.30         23.96         57.20         18.84         De neg-skewed
+ZM      30      128     0.2     2*64      -         64    6     62.49         24.95         59.60         22.10         De neg-skewed
+Z2      30      128     0.2     2*64      -         64    5     62.76         29.67         57.18         29.01         De neg-skewed
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> SemEval balanced train (upsampled w/ CLARIN neg train) (14079 neg/15533 neu/13724 pos)
+<EN> SemEval full dev (1153 neg/3328 neu/2941 pos)
+<EN> SemEval full test (1153 neg/3328 neu/2941 pos)
+<DE> SB-10k full test (989 neg/4131 neu/1509 pos)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  pred. comment
+Z1      30      128     0.2     2*64      -         64    1     59.11         23.29         57.00         19.05         De neg-skewed
+ZM      30      128     0.2     2*64      -         64    8     64.23         23.00         60.41         21.29         De neg-skewed
+Z2      30      128     0.2     2*64      -         64    6     64.17         25.33         60.45         25.22         De neg-skewed
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> SemEval balanced train (downsampled) (5383 neg/6000 neu/6000 pos)
+<EN> SemEval full dev (1153 neg/3328 neu/2941 pos)
+<EN> SemEval full test (1153 neg/3328 neu/2941 pos)
+<DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z1      30      128     0.2     2*64      -         64    1     49.20         42.18         48.42         31.41
+ZM      30      128     0.2     2*64      -         64    4     57.67         46.51         56.09         41.06
+Z2      30      128     0.2     2*64      -         64    9     58.36         46.43         57.21         46.77
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN balanced train (8696 neg/9000 neu/9415 pos)
+<EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
+<EN> CLARIN full test (1863 neg/3555 neu/2019 pos)
+<DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
 setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 Z1      30      128     0.2     2*64      -         64    1     55.91         49.46         56.07         35.17
+ZM      30      128     0.2     2*64      -         64    8     59.91         48.88         59.69         43.26
+Z2      30      128     0.2     2*64      -         64    4     59.83         51.38         59.39         50.20
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN full train (8696 neg/16590 neu/9415 pos)
+<EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
+<EN> CLARIN full test (1863 neg/3555 neu/2019 pos)
+<DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 
----------------------------------------------------------------------------------------------------------------------------------
-
->CLARIN En balanced train (8696 neg/9000 neu/9415 pos); imbalanced dev (1863 neg/3555 neu/2019 pos), test (1863 neg/3555 neu/2019 pos)
->DE_10k imbalanced test (989 neg/4131 neu/1509 pos)
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN balanced train (8696 neg/9000 neu/9415 pos)
+<EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
+<EN> CLARIN full test (1863 neg/3555 neu/2019 pos)
+<DE> SB-10k full test (989 neg/4131 neu/1509 pos)
 setting MAXLEN  bilstm  dropout dense     dropouts  batch  epoch  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 Z1      30      32      -       2*64      -         32      1     57.46         62.80         57.94         46.96
 Z1      30      64      0.5     2*64      -         32      1     55.43         60.90         55.63         48.05
 Z1      30      64      -       2*64      -         32      1     54.50         60.28         54.71         48.84
 Z1      30      64      -       2*128     -         32      1     54.44         58.25         54.49         46.69
 Z1      30      128     -       2*128     -         32      1     56.63         62.83         56.79         46.99
-
 ZM      30      64      -       2*64      -         32      8     58.69         57.78         58.84         50.84
 ZM      30      64      -       2*128     -         32      6     57.86         57.38         58.00         51.08
 ZM      30      128     -       2*128     -         32      5     58.09         60.02         58.21         52.83
-
-setting MAXLEN  bilstm  dropout dense     dropouts  batch  epoch  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 Z2      10      -       -       1*128     -         16      2     57.02         59.10
 Z2      10      -       -       3*128     -         16      1     57.04         60.36
 Z2      30      32      -       2*32      0.4,-     32      6     58.41         59.12
@@ -145,7 +166,6 @@ Z2      30      256     -       256+128   0.4,-     32      5     59.98         
 Z2      30      256     -       2*256     0.4,-     32      7     60.75         62.62
 Z2      30      256     0.1     2*256     0.2,-     32      7     59.86         60.82
 Z2      10      512     0.5     2*128     -         16      7     55.63         55.90
-
 Z2      10      128     0.5     4*32      -         32      9     56.77         58.55
 Z2      10      256     0.5     4*64      -         32      6     56.75         58.80
 
