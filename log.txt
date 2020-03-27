@@ -23,7 +23,7 @@ Test: imbalanced CLARIN En 1863 neg/3555 neu/2019 pos
 Test: imbalanced SB-10k De 989 neg/4131 neu/1509 pos
 
 >Data split
-70/15/15 (last 30% Tweets taken directly for dev & test)
+70/15/15
 
 >Tweet cleansing
 1) removed 'Not Available' ones
@@ -72,10 +72,21 @@ N         Z2      30      128     0.2     2*64      -         64    8     63.60 
 >> comparing balanced & imbalanced train data
 >SemEval En balanced(up) train (14079 neg/15533 neu/13724 pos); full dev (1153 neg/3328 neu/2941 pos), test (1153 neg/3328 neu/2941 pos)
 >De CLARIN full test (2078 neg/6326 neu/2923 pos)
-balanced  setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-Y         Z1      30      128     0.2     2*64      -         64    1     60.13         22.58         56.72         17.25
-Y         ZM
-Y         Z2
+balanced  setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  pred. comment
+Y         Z1      30      128     0.2     2*64      -         64    1     60.30         23.96         57.20         18.84         De neg-skewed
+Y         ZM      30      128     0.2     2*64      -         64    6     62.49         24.95         59.60         22.10         De neg-skewed
+Y         Z2      30      128     0.2     2*64      -         64    5     62.76         29.67         57.18         29.01         De neg-skewed
+N         Z1      30      128     0.2     2*64      -         64    1     62.14         52.14         57.69         34.79         De neu-skewed
+N         ZM      30      128     0.2     2*64      -         64    8     63.66         51.02         59.17         40.55
+N         Z2      30      128     0.2     2*64      -         64    7     64.16         51.26         60.48         50.23
+---------------------------------------------------------------------------------------------------------------------------------
+>> comparing balanced & imbalanced train data
+>SemEval En balanced(up) train (14079 neg/15533 neu/13724 pos); full dev (1153 neg/3328 neu/2941 pos), test (1153 neg/3328 neu/2941 pos)
+>De SB-10k full test (989 neg/4131 neu/1509 pos)
+balanced  setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  pred. comment
+Y         Z1      30      128     0.2     2*64      -         64    1     59.11         23.29         57.00         19.05         De neg-skewed
+Y         ZM      30      128     0.2     2*64      -         64    8     64.23         23.00         60.41         21.29         De neg-skewed
+Y         Z2      30      128     0.2     2*64      -         64    6     64.17         25.33         60.45         25.22         De neg-skewed
 N         Z1      30      128     0.2     2*64      -         64    1     62.14         52.14         57.69         34.79
 N         ZM      30      128     0.2     2*64      -         64    8     63.66         51.02         59.17         40.55
 N         Z2      30      128     0.2     2*64      -         64    7     64.16         51.26         60.48         50.23
@@ -85,6 +96,8 @@ N         Z2      30      128     0.2     2*64      -         64    7     64.16 
 >De CLARIN full test (2078 neg/6326 neu/2923 pos)
 balanced  setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 Y         Z1      30      128     0.2     2*64      -         64    1     49.20         42.18         48.42         31.41
+Y         ZM      30      128     0.2     2*64      -         64    4     57.67         46.51         56.09         41.06
+Y         Z2      30      128     0.2     2*64      -         64    9     58.36         46.43         57.21         46.77
 N         Z1      30      128     0.2     2*64      -         64    1     62.14         52.14         57.69         34.79
 N         ZM      30      128     0.2     2*64      -         64    8     63.66         51.02         59.17         40.55
 N         Z2      30      128     0.2     2*64      -         64    7     64.16         51.26         60.48         50.23
@@ -141,8 +154,7 @@ Z2      10      256     0.5     4*64      -         32      6     56.75         
 Tokenizer does not recognize De vocabs
   - fit_on_texts on both train(En) and test(De)
 EmbLayer data imbalance
-  - imbalanced En dev + imbalanced En/De test -> De prediction skews
-  - balanced En dev + imbalanced En/De test -> De prediction skews
+low validation score
 training only with En -> De embs not updated
 
 
