@@ -17,10 +17,10 @@ import tensorflow as tf
 import numpy as np
 import utils
 
-train_dir = './TWEETS/CLEAN/SemEval_imbalanced/train'
-dev_dir = './TWEETS/CLEAN/SemEval_imbalanced/dev'
-test_dir = './TWEETS/CLEAN/SemEval_imbalanced/test'
-de_test_dir = './TWEETS/CLEAN/DE_CLARIN_imbalanced/test'
+train_dir = './TWEETS/CLEAN/EN_CLARIN_downsampled/train'
+dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
+test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
+de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
 train_texts, train_labels = utils.load_data(train_dir)
 dev_texts, dev_labels = utils.load_data(dev_dir)
 test_texts, test_labels = utils.load_data(test_dir)
@@ -123,10 +123,10 @@ def build_model1(lr=0.0, lr_d=0.0, units=0, spatial_dr=0.0, kernel_size1=3, kern
     x = Dropout(dr)(Dense(int(dense_units / 2), activation='relu') (x))
     x = Dense(3, activation = "softmax")(x)
     model = Model(inputs = inp, outputs = x)
-    # model.compile(loss="sparse_categorical_crossentropy", optimizer=Adam(lr=lr, decay=lr_d), metrics=["accuracy"])
-    model.compile(loss="sparse_categorical_crossentropy", optimizer='adam', metrics=["accuracy"])
+    model.compile(loss="sparse_categorical_crossentropy", optimizer=Adam(lr=lr, decay=lr_d), metrics=["accuracy"])
+    # model.compile(loss="sparse_categorical_crossentropy", optimizer='adam', metrics=["accuracy"])
 
-    history = model.fit(x_train, y_train, batch_size = 32, epochs = 100, validation_data=(x_val, y_val), 
+    history = model.fit(x_train, y_train, batch_size = 64, epochs = 100, validation_data=(x_val, y_val), 
                         verbose = 1, shuffle=True, callbacks = [check_point, early_stop])
     model = load_model(file_path)
     return model
