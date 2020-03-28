@@ -10,10 +10,10 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint
 import numpy as np
 import utils
 
-train_dir = './TWEETS/CLEAN/EN_CLARIN_balanced/train'
-dev_dir = './TWEETS/CLEAN/EN_CLARIN_imbalanced/dev'
-test_dir = './TWEETS/CLEAN/EN_CLARIN_imbalanced/test'
-de_test_dir = './TWEETS/CLEAN/DE_CLARIN_imbalanced/test'
+train_dir = './TWEETS/CLEAN/EN_CLARIN_oversampled/train'
+dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
+test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
+de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
 train_texts, train_labels = utils.load_data(train_dir)
 dev_texts, dev_labels = utils.load_data(dev_dir)
 test_texts, test_labels = utils.load_data(test_dir)

@@ -7,23 +7,16 @@ CLARIN: https://www.clarin.si/repository/xmlui/handle/11356/1054
 SB-10K: link: https://www.spinningbytes.com/resources/germansentiment/
 
 >Available datasets (neg/neu/pos)
-EN: SemEval13-16 full (train 5383/15533/13724; dev 1153/3328/2941; test 1153/3328/2941)
-EN: SemEval13-16 balanced (upsampling) (train 14079/15533/13724; dev 1153/3328/2941; test 1153/3328/2941) * merged with CLARIN neg train
-EN: SemEval13-16 balanced (downsampling) (train 5383/6000/6000; dev 1153/3328/2941; test 1153/3328/2941)
-EN: CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
-EN: CLARIN.si balanced (train 8696/9000/9415; dev 1863/3555/2019; test 1863/3555/2019)
-DE: CLARIN.si full (test 2078/6326/2923)
-DE: SB-10k (989 neg/4131 neu/1509 pos)
-DE: SB-10k balanced (989 neg/1500 neu/1509 pos)
-
->Datasets in use
-Train: balanced CLARIN En 8696 neg/9000 neu/9415 pos
-Dev: imbalanced CLARIN En 1863 neg/3555 neu/2019 pos
-Test: imbalanced CLARIN En 1863 neg/3555 neu/2019 pos
-Test: imbalanced SB-10k De 989 neg/4131 neu/1509 pos
-
->Data split
-70/15/15
+<EN> SemEval13-16 full (train 5383/15533/13724; dev 1153/3328/2941; test 1153/3328/2941)
+<EN> SemEval13-16 oversampled (train 14079/15533/13724; dev 1153/3328/2941; test 1153/3328/2941) * merged with CLARIN neg train
+<EN> SemEval13-16 downsampled (train 5383/6000/6000; dev 1153/3328/2941; test 1153/3328/2941)
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<EN> CLARIN.si oversampled (train 16590/16590/16590; dev 1153/3328/2941; test 1153/3328/2941)
+<EN> CLARIN.si downsampled (train 8696/9000/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si full (test 2078/6326/2923)
+<DE> SB-10k (989 neg/4131 neu/1509 pos)
+<DE> SB-10k balanced (989 neg/1500 neu/1509 pos)
+>Train/Dev/Test split: 70/15/15
 
 >Tweet cleansing
 1) removed 'Not Available' ones
@@ -61,11 +54,12 @@ Z3: M3: En train/dev/test [EnDe BWE] trainable; De test (zero-shot)
 <model architecture: bilstm(128) + dropout(0.2) + dense(64) + dense(64)> <batch=64> <setting=Z2>
 train           dev             test(En)      test(De)      F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  pred. comment
 SemEval(full)   SemEval(full)   SemEval(full) CLARIN(full)  64.16         51.26         60.48         50.23
-SemEval(upsamp) SemEval(full)   SemEval(full) CLARIN(full)  62.76         29.67         57.18         29.01         De neg-skewed
-SemEval(upsamp) SemEval(full)   SemEval(full) SB-10k(full)  64.17         25.33         60.45         25.22         De neg-skewed
+SemEval(oversamp) SemEval(full) SemEval(full) CLARIN(full)  62.76         29.67         57.18         29.01         De neg-skewed
+SemEval(oversamp) SemEval(full) SemEval(full) SB-10k(full)  64.17         25.33         60.45         25.22         De neg-skewed
 SemEval(downsamp) SemEval(full) SemEval(full) CLARIN(full)  58.36         46.43         57.21         46.77
-CLARIN(full)    CLARIN(full)    CLARIN(full)  CLARIN(full)
-CLARIN(balanced)  CLARIN(full)  CLARIN(full)  CLARIN(full)  59.83         51.38         59.39         50.20
+CLARIN(full)    CLARIN(full)    CLARIN(full)  CLARIN(full)  63.13         56.71         61.31         50.85
+CLARIN(oversamp)  CLARIN(full)  CLARIN(full)  CLARIN(full)  60.74         51.38         60.62         49.87
+CLARIN(downsamp)  CLARIN(full)  CLARIN(full)  CLARIN(full)  59.83         51.38         59.39         50.20
 -------------------------------------------------------------------------------------------------------------------------------------------
 <model architecture: Medium post (https://medium.com/@panghalarsh/sentiment-analysis-in-python-using-keras-glove-twitter-word-embeddings-and-deep-rnn-on-a-combined-580646cb900a)> <batch=64> <setting=Z2>
 train           dev             test(En)      test(De)      F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  pred. comment
@@ -88,7 +82,7 @@ Z1      30      128     0.2     2*64      -         64    1     62.14         52
 ZM      30      128     0.2     2*64      -         64    8     63.66         51.02         59.17         40.55
 Z2      30      128     0.2     2*64      -         64    7     64.16         51.26         60.48         50.23
 -------------------------------------------------------------------------------------------------------------------------------------------
-<EN> SemEval balanced train (upsampled w/ CLARIN neg train) (14079 neg/15533 neu/13724 pos)
+<EN> SemEval oversampled train (oversampled w/ CLARIN neg train) (14079 neg/15533 neu/13724 pos)
 <EN> SemEval full dev (1153 neg/3328 neu/2941 pos)
 <EN> SemEval full test (1153 neg/3328 neu/2941 pos)
 <DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
@@ -97,7 +91,7 @@ Z1      30      128     0.2     2*64      -         64    1     60.30         23
 ZM      30      128     0.2     2*64      -         64    6     62.49         24.95         59.60         22.10         De neg-skewed
 Z2      30      128     0.2     2*64      -         64    5     62.76         29.67         57.18         29.01         De neg-skewed
 -------------------------------------------------------------------------------------------------------------------------------------------
-<EN> SemEval balanced train (upsampled w/ CLARIN neg train) (14079 neg/15533 neu/13724 pos)
+<EN> SemEval oversampled train (oversampled w/ CLARIN neg train) (14079 neg/15533 neu/13724 pos)
 <EN> SemEval full dev (1153 neg/3328 neu/2941 pos)
 <EN> SemEval full test (1153 neg/3328 neu/2941 pos)
 <DE> SB-10k full test (989 neg/4131 neu/1509 pos)
@@ -106,7 +100,7 @@ Z1      30      128     0.2     2*64      -         64    1     59.11         23
 ZM      30      128     0.2     2*64      -         64    8     64.23         23.00         60.41         21.29         De neg-skewed
 Z2      30      128     0.2     2*64      -         64    6     64.17         25.33         60.45         25.22         De neg-skewed
 -------------------------------------------------------------------------------------------------------------------------------------------
-<EN> SemEval balanced train (downsampled) (5383 neg/6000 neu/6000 pos)
+<EN> SemEval downsampled train (5383 neg/6000 neu/6000 pos)
 <EN> SemEval full dev (1153 neg/3328 neu/2941 pos)
 <EN> SemEval full test (1153 neg/3328 neu/2941 pos)
 <DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
@@ -115,7 +109,7 @@ Z1      30      128     0.2     2*64      -         64    1     49.20         42
 ZM      30      128     0.2     2*64      -         64    4     57.67         46.51         56.09         41.06
 Z2      30      128     0.2     2*64      -         64    9     58.36         46.43         57.21         46.77
 -------------------------------------------------------------------------------------------------------------------------------------------
-<EN> CLARIN balanced train (8696 neg/9000 neu/9415 pos)
+<EN> CLARIN downsampled train (8696 neg/9000 neu/9415 pos)
 <EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
 <EN> CLARIN full test (1863 neg/3555 neu/2019 pos)
 <DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
@@ -129,9 +123,22 @@ Z2      30      128     0.2     2*64      -         64    4     59.83         51
 <EN> CLARIN full test (1863 neg/3555 neu/2019 pos)
 <DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
 setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-
+Z1      30      128     0.2     2*64      -         64    1     60.99         54.78         59.21         32.43
+ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
+Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
 -------------------------------------------------------------------------------------------------------------------------------------------
-<EN> CLARIN balanced train (8696 neg/9000 neu/9415 pos)
+<EN> CLARIN oversampled train (16590 neg/16590 neu/16590 pos)
+<EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
+<EN> CLARIN full test (1863 neg/3555 neu/2019 pos)
+<DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  pred. comment
+Z1      30      128     0.2     2*64      -         64    1     58.85         51.98         58.54         35.11         De neu-skewed
+ZM      30      128     0.2     2*64      -         64    9     61.09         49.48         60.95         43.06
+Z2      30      128     0.2     2*64      -         64    6     60.74         51.38         60.62         49.87
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+
+<EN> CLARIN downsampled train (8696 neg/9000 neu/9415 pos)
 <EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
 <EN> CLARIN full test (1863 neg/3555 neu/2019 pos)
 <DE> SB-10k full test (989 neg/4131 neu/1509 pos)
@@ -181,7 +188,7 @@ training only with En -> De embs not updated
 
 
 >>Older results
->Experiments using CLARIN En imbalanced (12422 neg/23700 neu/13453 pos)
+>Experiments using CLARIN En full (12422 neg/23700 neu/13453 pos)
 * best epoch num reported by Callback
 * - means did not implement
 setting MAXLEN  bilstm  lstm  dropout   dense   dropouts  batch   epoch F1-micro(En)  F1-micro(De)
