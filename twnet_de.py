@@ -9,13 +9,13 @@ from keras.utils import to_categorical
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 import numpy as np
 from sklearn.metrics import f1_score
-import pickle, json
+import pickle
 import utils
 
-train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
-dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
-test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
-de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
+train_dir = './TWEETS/CLEAN/DE_CLARIN_full/train'
+dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
+test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
+de_test_dir = './TWEETS/CLEAN/DE10k_full'
 train_texts, train_labels = utils.load_data(train_dir)
 dev_texts, dev_labels = utils.load_data(dev_dir)
 test_texts, test_labels = utils.load_data(test_dir)
@@ -24,15 +24,12 @@ de_test_texts, de_test_labels = utils.load_data(de_test_dir)
 # MAX_WORDS = 30000
 MAXLEN = 30    # max tweet word count
 
+with open('tokenizer.pickle', 'rb') as tokenizer_input:
+    tokenizer = pickle.load(tokenizer_input)
+print('restored Tokenizer object from twnet_en')
 print('transforming into vectors...')
-tokenizer = Tokenizer()
-tokenizer.fit_on_texts(train_texts + dev_texts + test_texts + de_test_texts)
-# with open('tokenizer.pickle', 'wb') as tokenizer_output:
-#     pickle.dump(tokenizer, tokenizer_output, protocol=pickle.HIGHEST_PROTOCOL)
-tokenizer_json = tokenizer.to_json()
-with open('tokenizer.json', 'w') as dumpfile:
-    json.dump(tokenizer_json, dumpfile)
-
+# tokenizer = Tokenizer()
+# tokenizer.fit_on_texts(train_texts + dev_texts + test_texts + de_test_texts)
 
 vocab_size = len(tokenizer.word_index) + 1      # +UNK
 train_sequences = tokenizer.texts_to_sequences(train_texts)
@@ -86,28 +83,30 @@ EMBEDDING_DIM = 100
 # embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
 
 # build model
-model = models.Sequential()
-model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
+saved_model = models.load_model('best_model.h5')
+# model = models.Sequential()
+# # model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
 # model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=True, input_length=MAXLEN))
-# model.add(layers.Conv1D(128, 2, padding='same', activation='relu'))
-# model.add(layers.MaxPooling1D(2))
-model.add(layers.Bidirectional(layers.LSTM(128)))
-model.add(layers.Dropout(0.2))
-model.add(layers.Dense(64, activation='relu'))
-model.add(layers.Dense(64, activation='relu'))
-model.add(layers.Dense(3, activation='softmax'))
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
-es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
-mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
-print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
+# # model.add(layers.Conv1D(128, 2, padding='same', activation='relu'))
+# # model.add(layers.MaxPooling1D(2))
+# model.add(layers.Bidirectional(layers.LSTM(128)))
+# model.add(layers.Dropout(0.2))
+# model.add(layers.Dense(128, activation='relu'))
+# model.add(layers.Dense(64, activation='relu'))
+# model.add(layers.Dense(3, activation='softmax'))
+# model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
+# es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
+# mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
+# history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+print(saved_model.summary())
+print('trained embedding shape:', saved_model.layers[0].get_weights()[0].shape)
 
 # test_loss, test_acc = model.evaluate(x_test, y_test)
 # print('test loss:', test_loss, 'test acc:', test_acc)
 gold = y_test
-predicted = model.predict(x_test).argmax(axis=1)
+predicted = saved_model.predict(x_test).argmax(axis=1)
 gold2 = y_test2
-predicted2 = model.predict(x_test2).argmax(axis=1)
+predicted2 = saved_model.predict(x_test2).argmax(axis=1)
 
 print('sample en gold:', gold[:30])
 print('sample en pred:', predicted[:30])

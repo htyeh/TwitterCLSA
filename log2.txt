@@ -1,0 +1,57 @@
+>Experiment settings (C-classical transfer, Z-zero-shot transfer)
+Z1: En train/dev/test, EmbLayer; De test (zero-shot) -> De vocab should have random embeddings
+ZM: En train/dev/test, [En BWE]; De test (zero-shot) -> De vocab should have all 0 embeddings
+Z2: En train/dev/test, [EnDe BWE] fixed; De test (zero-shot)
+Z3: En train/dev/test, [EnDe BWE] trainable; De test (zero-shot)
+C1: En train/dev/test, EmbLayer; De train/dev/test (fine-tuning)
+C2: En train/dev/test, [EnDe BWE] fixed; De train/dev/test (fine-tuning)
+C3: En train/dev/test, [EnDe BWE] trainable; De train/dev/test (fine-tuning)
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+< tests to compare performance of embeddings: Collados et al. vs GloVe Twitter >
+<EN> CLARIN full train (8696 neg/16590 neu/9415 pos)
+<EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
+<EN> CLARIN full test (1863 neg/3555 neu/2019 pos)
+<DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
+<model architecture: bilstm(128) + dropout(0.2) + dense(64) + dense(64)> <batch=64> <setting=ZM>
+embeddings        dim   epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  pred. comment
+EmbLayer(Z1)      100   1     60.65         65.44         59.39         44.94         De neu-skewed
+Collados et al.   100   10    63.19         54.08         61.53         41.57
+GloVe Twitter     100   5     62.66         58.43         61.53         38.50         De neu-skewed
+GloVe Twitter     200   3     63.09         58.57         61.10         37.94         De neu-skewed
+-------------------------------------------------------------------------------------------------------------------------------------------
+< same results copied from log.txt to compare with classical settings >
+<EN> CLARIN full train (8696 neg/16590 neu/9415 pos)
+<EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
+<EN> CLARIN full test (1863 neg/3555 neu/2019 pos)
+<DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z1      30      128     0.2     2*64      -         64    1     60.99         54.78         59.21         32.43
+ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
+Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
+Z3      30      128     0.2     2*64      -         64    1     62.33         55.64         60.41         48.26
+-------------------------------------------------------------------------------------------------------------------------------------------
+< notes on fine-tuning >
+** fine-tuning: try full De / downsized De training
+** twnet_en trains with en / twnet_de trains with de / evaluation done with twnet_de
+** Tokenizer from twnet_en saved with pickle / refitting Tokenizer in twnet_de results in diff. indices and scores
+** dumping with pickle preferred over json for implemental simplicity and storage (to encode EN train/dev/test + DE test about 3M vs 9.5M)
+-------------------------------------------------------------------------------------------------------------------------------------------
+< tests with restored pickle >
+<model 1: Tokenizer on EN CLARIN train/dev/test and DE CLARIN test, setting=Z1>
+<model 2: Tokenizer=loaded pickle from model 1>
+<model 3: Tokenizer=loaded pickle from model 1>
+                                                                F1-micro(1)   F1-micro(2)   F1-macro(1)   F1-macro(2)
+<model 1: test on EN CLARIN (1) / DE CLARIN (2)>                61.62         55.39         58.29         30.44
+<model 2: test on EN CLARIN (1) / DE CLARIN (2)>                61.62         55.39         58.29         30.44
+<model 3: test on DE 10k (1) / DE CLARIN (2)>                   65.53         55.39         41.58         30.44
+** observation1: restored Tokenizer + same test sets lead to same results (model 1 vs model 2)
+** observation2: abnormal performance on DE 10k test data: better micro than when testing on EN (model 2 vs model 3)
+-------------------------------------------------------------------------------------------------------------------------------------------
+< classical vs zero-shot >
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si full (train 9697/29522/13643; dev 2078/6326/2923; test 2078/6326/2923)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+C1
+C2
+C3

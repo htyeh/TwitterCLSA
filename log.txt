@@ -13,7 +13,7 @@ SB-10K: link: https://www.spinningbytes.com/resources/germansentiment/
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
 <EN> CLARIN.si oversampled (train 16590/16590/16590; dev 1153/3328/2941; test 1153/3328/2941)
 <EN> CLARIN.si downsampled (train 8696/9000/9415; dev 1863/3555/2019; test 1863/3555/2019)
-<DE> CLARIN.si full (test 2078/6326/2923)
+<DE> CLARIN.si full (train 9697/29522/13643; dev 2078/6326/2923; test 2078/6326/2923)
 <DE> SB-10k (989 neg/4131 neu/1509 pos)
 <DE> SB-10k balanced (989 neg/1500 neu/1509 pos)
 >Train/Dev/Test split: 70/15/15
@@ -34,21 +34,18 @@ https://towardsdatascience.com/twitter-sentiment-analysis-using-fasttext-9ccd044
 2) fixed [En BWE], testing on De directly (sanity check for overlapping words)
 2) fixed [EnDe BWE] (classical fine-tuning)
 2) *fixed [EnDe BWE] (zero-shot)
-3) *trainable [EnDe BWE] (classical fine-tuning)
+3) trainable [EnDe BWE] (classical fine-tuning)
 3) trainable [EnDe BWE] (zero-shot)
 4) combine fixed & trainable [EnDe BWE]
 5) update [En BWE], map to [De BWE]
 6) search for better architecture (e.g. adding a Conv layer) to achieve better results
 * only En part of [EnDe BWE] get updates (no training on De vocab)
 
->Experiment settings (M-monolingual, C-classical transfer, Z-zero-shot transfer)
-M1: En train/dev/test, EmbLayer
-M2: En train/dev/test, [EnDe BWE] fixed
-M3: En train/dev/test [EnDe BWE] trainable
+>Experiment settings (C-classical transfer, Z-zero-shot transfer)
 Z1: En train/dev/test, EmbLayer; De test (zero-shot) -> De vocab should have random embeddings
 ZM: En train/dev/test, [En BWE]; De test (zero-shot) -> De vocab should have all 0 embeddings
 Z2: En train/dev/test, [EnDe BWE] fixed; De test (zero-shot)
-Z3: M3: En train/dev/test [EnDe BWE] trainable; De test (zero-shot)
+Z3: En train/dev/test, [EnDe BWE] trainable; De test (zero-shot)
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 <model architecture: bilstm(128) + dropout(0.2) + dense(64) + dense(64)> <batch=64> <setting=Z2>
@@ -132,6 +129,7 @@ setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1
 Z1      30      128     0.2     2*64      -         64    1     60.99         54.78         59.21         32.43
 ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
 Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
+Z3      30      128     0.2     2*64      -         64    1     62.33         55.64         60.41         48.26
 -------------------------------------------------------------------------------------------------------------------------------------------
 <EN> CLARIN full train (8696 neg/16590 neu/9415 pos)
 <EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
@@ -193,10 +191,8 @@ Z2      10      256     0.5     4*64      -         32      6     56.75         
 >Issues to address
 Tokenizer does not recognize De vocabs
   - fit_on_texts on both train(En) and test(De)
-EmbLayer data imbalance
 low validation score
-training only with En -> De embs not updated
-
+De embs not updated in zero-shot
 
 
 
