@@ -30,15 +30,16 @@ https://towardsdatascience.com/twitter-sentiment-analysis-using-fasttext-9ccd044
 8) converted \u2019 (to '), \u002c (to ,)
 
 >Experiments
-1) baseline: train/test on De data
-2) fixed [En BWE], testing on De directly (sanity check for overlapping words)
-2) fixed [EnDe BWE] (classical fine-tuning)
-2) *fixed [EnDe BWE] (zero-shot)
-3) trainable [EnDe BWE] (classical fine-tuning)
-3) trainable [EnDe BWE] (zero-shot)
-4) combine fixed & trainable [EnDe BWE]
-5) update [En BWE], map to [De BWE]
-6) search for better architecture (e.g. adding a Conv layer) to achieve better results
+1) baseline: train/dev/test on De
+2) EmbLayer, test on De directly
+3) fixed [En BWE], test on De directly (sanity check for overlapping words)
+4) fixed [EnDe BWE] (classical fine-tuning)
+5) *fixed [EnDe BWE] (zero-shot)
+6) trainable [EnDe BWE] (classical fine-tuning)
+7) trainable [EnDe BWE] (zero-shot)
+8) combine fixed & trainable [EnDe BWE]
+9) trainable [En BWE], map to [De BWE]
+10) search for better architecture (e.g. adding a Conv layer) to achieve better results
 * only En part of [EnDe BWE] get updates (no training on De vocab)
 
 >Experiment settings (C-classical transfer, Z-zero-shot transfer)
