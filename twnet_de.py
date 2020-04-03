@@ -15,9 +15,9 @@ import utils
 # train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 # dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
-de_train_dir = './TWEETS/CLEAN/DE_CLARIN_full/train'
-de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
-de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
+de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small10/train'
+de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_small10/dev'
+de_test_dir = './TWEETS/CLEAN/DE_CLARIN_small10/test'
 # train_texts, train_labels = utils.load_data(train_dir)
 # dev_texts, dev_labels = utils.load_data(dev_dir)
 test_texts, test_labels = utils.load_data(test_dir)
@@ -97,7 +97,7 @@ EMBEDDING_DIM = 100
 # embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
 
 # build model
-model = models.load_model('best_model.h5')
+model = models.load_model('best_model.h5', compile=False)
 print(model.summary())
 es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)

@@ -6,10 +6,15 @@ Z1: En train/dev/test, EmbLayer; De test (zero-shot) -> De vocab should have ran
 ZM: En train/dev/test, [En BWE]; De test (zero-shot) -> De vocab should have all 0 embeddings
 Z2: En train/dev/test, [EnDe BWE] fixed; De test (zero-shot)
 Z3: En train/dev/test, [EnDe BWE] trainable; De test (zero-shot)
+Z4: En train/dev/test, [EnDe BWE][EnDe BWE trained]; De test (zero-shot)
 C1: En train/dev/test, EmbLayer; De train/dev/test (fine-tuning)
 C2: En train/dev/test, [EnDe BWE] fixed; De train/dev/test (fine-tuning)
 C3: En train/dev/test, [EnDe BWE] trainable; De train/dev/test (fine-tuning)
+*C4: En train/dev/test, [EnDe BWE][EnDe BWE trained]; De train/dev/test (fine-tuning)
 
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+TESTING EMBEDDINGS
 -------------------------------------------------------------------------------------------------------------------------------------------
 < tests to compare performance of embeddings: Collados et al. vs GloVe Twitter >
 <EN> CLARIN full train (8696 neg/16590 neu/9415 pos)
@@ -22,13 +27,18 @@ EmbLayer(Z1)      100   1     60.65         65.44         59.39         44.94   
 Collados et al.   100   10    63.19         54.08         61.53         41.57
 GloVe Twitter     100   5     62.66         58.43         61.53         38.50         De neu-skewed
 GloVe Twitter     200   3     63.09         58.57         61.10         37.94         De neu-skewed
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+PREPARATION FOR CLASSICAL TRANSFER SETTINGS
 -------------------------------------------------------------------------------------------------------------------------------------------
 < notes on fine-tuning >
 ** fine-tuning: try full De / downsized De training
 ** twnet_en trains with en / twnet_de trains with de / evaluation done with twnet_de
 ** Tokenizer from twnet_en saved with pickle / refitting Tokenizer in twnet_de would result in diff. indices and scores
-** dumping with pickle preferred over json for simpler implementation and storage (about 3M vs 9.5M <-- recalculate sizes)
+** dumping with pickle preferred over json for simpler implementation and storage (about 6M vs 17M)
 ** Tokenizer is fit on all De train/dev/test in twnet_en so that in twnet_de all De vocab can be allocated embs
+
 < steps of training + tuning >
 ** twnet_en: Tokenizer is fit on EN train/dev/test + DE train/dev/test
 ** model trained/val. on EN, record scores on EN and DE, save best model
@@ -48,24 +58,10 @@ GloVe Twitter     200   3     63.09         58.57         61.10         37.94   
 <model 3: test on DE 10k (1) / DE CLARIN (2)>                   65.53         55.39         41.58         30.44
 ** observation1: restored Tokenizer + same test sets lead to same results (model 1 vs model 2)
 ** observation2: abnormal performance on DE 10k test data: better micro than when testing on EN (model 2 vs model 3)
+
+
 -------------------------------------------------------------------------------------------------------------------------------------------
-< same zero-shot results copied from log.txt to compare with classical settings >
-<EN> CLARIN full train (8696 neg/16590 neu/9415 pos)
-<EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
-<EN> CLARIN full test (1863 neg/3555 neu/2019 pos)
-<DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
-setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-Z1      30      128     0.2     2*64      -         64    1     60.99         54.78         59.21         32.43
-ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
-Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
-Z3      30      128     0.2     2*64      -         64    1     62.33         55.64         60.41         48.26
--------------------------------------------------------------------------------------------------------------------------------------------
-< as comparison: scores when train/dev/test with full De >
-<DE> CLARIN.si full (train 9697/29522/13643; dev 2078/6326/2923; test 2078/6326/2923)
-setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-M1      30      128     0.2     2*64      -         64    1     -             57.89         -             49.35
-M2      30      128     0.2     2*64      -         64    6     -             59.49         -             54.13
-M3      30      128     0.2     2*64      -         64    1     -             58.76         -             52.50
+EVALUATING THE EFFECTS OF DE DATASET SIZE
 -------------------------------------------------------------------------------------------------------------------------------------------
 < classical settings, with full De data >
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
@@ -80,3 +76,56 @@ C3      train 30      128     0.2     2*64      -         64    1         -     
 ** observation1: De performance comparable to those in De-monolingual settings after fine-tuning
 ** observation2: small decrease in En performance after fine-tuning
 -------------------------------------------------------------------------------------------------------------------------------------------
+< as comparison: scores when train/dev/test with full De >
+<DE> CLARIN.si full (train 9697/29522/13643; dev 2078/6326/2923; test 2078/6326/2923)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+M1      30      128     0.2     2*64      -         64    1     -             57.89         -             49.35
+M2      30      128     0.2     2*64      -         64    6     -             59.49         -             54.13
+M3      30      128     0.2     2*64      -         64    1     -             58.76         -             52.50
+-------------------------------------------------------------------------------------------------------------------------------------------
+< as comparison: scores when train/dev/test with 20% De >
+<DE> CLARIN.si 20% (CLARIN_small20) (train 1939/5904/2729; dev 2078/6326/2923; test 2078/6326/2923)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+M1      30      128     0.2     2*64      -         64    1     -             55.26         -             41.55
+M2      30      128     0.2     2*64      -         64    5     -             58.60         -             50.59
+M3      30      128     0.2     2*64      -         64    1     -             57.23         -             48.82
+** observation: still better scores than zero-shot
+-------------------------------------------------------------------------------------------------------------------------------------------
+< as comparison: scores when train/dev/test with 10% De >
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+M1      30      128     0.2     2*64      -         64    1     -             54.25         -             28.21         De neu-skewed
+M2      30      128     0.2     2*64      -         64    6     -             56.94         -             50.70
+M3      30      128     0.2     2*64      -         64    1     -             54.24         -             38.22
+** observation1: lower scores as dataset size decreases
+** observation2: possible overfitting & underrepresentation of minority classes in low-resource setting (ref. neu-skewness)
+** observation3: comparable scores with zero-shot
+-------------------------------------------------------------------------------------------------------------------------------------------
+< classical settings, with 10% De data >
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+C1      train 30      128     0.2     2*64      -         64    1         -         61.29         54.28         59.09         32.60
+        tune  30      128     0.2     2*64      -         64    -         1         60.97         55.79         58.01         45.13
+C2      train 30      128     0.2     2*64      -         64    9         -         63.68         57.29         61.02         50.28
+        tune  30      128     0.2     2*64      -         64    -         2         61.52         60.03         58.94         51.87
+C3      train 30      128     0.2     2*64      -         64    1         -         62.96         57.08         61.29         49.56
+        tune  30      128     0.2     2*64      -         64    -         1         60.25         56.69         57.63         46.63
+-------------------------------------------------------------------------------------------------------------------------------------------
+< same zero-shot results copied from log.txt to compare with classical settings >
+<EN> CLARIN full train (8696 neg/16590 neu/9415 pos)
+<EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
+<EN> CLARIN full test (1863 neg/3555 neu/2019 pos)
+<DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z1      30      128     0.2     2*64      -         64    1     60.99         54.78         59.21         32.43
+ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
+Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
+Z3      30      128     0.2     2*64      -         64    1     62.33         55.64         60.41         48.26
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+FIXED + TRAINED EnDeBWE (Z4 & C4)
+-------------------------------------------------------------------------------------------------------------------------------------------
+< notes >
+** adjustment to ModelCheckpoint: save_weights_only to True

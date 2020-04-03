@@ -35,7 +35,7 @@ with open('tokenizer.pickle', 'wb') as tokenizer_output:
 print('Tokenizer object exported')
 # tokenizer_json = tokenizer.to_json()
 # with open('tokenizer.json', 'w') as dumpfile:
-    # json.dump(tokenizer_json, dumpfile)
+#     json.dump(tokenizer_json, dumpfile)
 
 vocab_size = len(tokenizer.word_index) + 1  # +UNK
 print('unique tokens in tokenizer: ' + str(vocab_size - 1))
@@ -105,7 +105,7 @@ embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedd
 # build model
 model = models.Sequential()
 # model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
-model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=True, input_length=MAXLEN))
+model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=False, input_length=MAXLEN))
 # model.add(layers.Conv1D(128, 2, padding='same', activation='relu'))
 # model.add(layers.MaxPooling1D(2))
 model.add(layers.Bidirectional(layers.LSTM(128)))

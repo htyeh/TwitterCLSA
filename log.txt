@@ -29,17 +29,20 @@ https://towardsdatascience.com/twitter-sentiment-analysis-using-fasttext-9ccd044
 7) punctuation removal
 8) converted \u2019 (to '), \u002c (to ,)
 
->Experiments
+>Experiment descriptions
 1) baseline: train/dev/test on De
 2) EmbLayer, test on De directly
 3) fixed [En BWE], test on De directly (sanity check for overlapping words)
 4) fixed [EnDe BWE] (classical fine-tuning)
-5) *fixed [EnDe BWE] (zero-shot)
-6) trainable [EnDe BWE] (classical fine-tuning)
+5) trainable [EnDe BWE] (classical fine-tuning)
+  a) try full De fine-tuning
+  b) try downsized De fine-tuning
+6) *fixed [EnDe BWE] (zero-shot)
 7) trainable [EnDe BWE] (zero-shot)
 8) combine fixed & trainable [EnDe BWE]
 9) trainable [En BWE], map to [De BWE]
-10) search for better architecture (e.g. adding a Conv layer) to achieve better results
+10) train En EmbLayer, map to De
+11) search for better architecture (e.g. adding a Conv layer) to achieve better results
 * only En part of [EnDe BWE] get updates (no training on De vocab)
 
 >Experiment settings (C-classical transfer, Z-zero-shot transfer)
@@ -193,7 +196,9 @@ Z2      10      256     0.5     4*64      -         32      6     56.75         
 Tokenizer does not recognize De vocabs
   - fit_on_texts on both train(En) and test(De)
 low validation score
+En: only vocab seen in training updated (generalization problem)
 De embs not updated in zero-shot
+fit Tokenizer on train vocab only: train these into sentiment vectors
 
 
 

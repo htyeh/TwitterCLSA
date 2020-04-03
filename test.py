@@ -17,7 +17,7 @@ import utils
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
 # de_train_dir = './TWEETS/CLEAN/DE_CLARIN_full/train'
 # de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
-de_test_dir = './TWEETS/CLEAN/DE_CLARIN_small10/test'
+de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
 # train_texts, train_labels = utils.load_data(train_dir)
 # dev_texts, dev_labels = utils.load_data(dev_dir)
 test_texts, test_labels = utils.load_data(test_dir)
@@ -28,7 +28,7 @@ de_test_texts, de_test_labels = utils.load_data(de_test_dir)
 # MAX_WORDS = 30000
 MAXLEN = 30    # max tweet word count
 
-with open('tokenizer.pickle', 'rb') as tokenizer_input:
+with open('sample.pickle', 'rb') as tokenizer_input:
     tokenizer = pickle.load(tokenizer_input)
 print('restored Tokenizer object from twnet_en')
 print('transforming into vectors...')
@@ -90,36 +90,67 @@ print(x_test_de[:3])
 
 EMBEDDING_DIM = 100
 
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/crosslingual_EN-DE_english_twitter_100d_weighted.txt.w2v')
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.200d.txt', dim=EMBEDDING_DIM)
+# embeddings_index1 = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
+# embeddings_index2 = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
 
-# embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
+# embedding_matrix1 = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index1)
+# embedding_matrix2 = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index2)
+# merged_embs = np.concatenate((embedding_matrix1, embedding_matrix2), axis=1)
 
-# build model
-model = models.load_model('best_model.h5', compile=False)
-print(model.summary())
+temp_model = models.load_model('sample_model.h5', compile=False)
+# print(temp_model.get_config())
+# temp_model._layers.pop(0)
+# temp_model._layers.pop(0)
+# print(temp_model.layers[0].get_weights()[0].shape)
+print(temp_model.get_config()['layers'][0]['config']['output_dim'])
+temp_model.get_config()['layers'][0]['config']['output_dim'] = 200
+temp_model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
+print(temp_model.get_config()['layers'][0]['config']['output_dim'])
+for layer in temp_model._layers:
+    print(layer)
+
+# model = models.Sequential([layers.Embedding(10, 200, input_length=MAXLEN)] + [layer for layer in temp_model.layers[1:]])
+
+model = models.Sequential()
+model.add(layers.Embedding(vocab_size, 200, trainable=False, input_length=MAXLEN))
+# model.add(layers.Embedding(vocab_size, 200, weights=[merged_embs], trainable=False, input_length=MAXLEN))
+# model.add(layers.Bidirectional(layers.LSTM(128)))
+# model.add(layers.Dropout(0.2))
+model.add(layers.Dense(64, activation='relu'))
+model.add(layers.Dense(64, activation='relu'))
+model.add(layers.Dense(3, activation='softmax'))
+model._layers[1].batch_input_shape = (10, 200)
+model.load_weights('sample_weights.h5')
+# set weights
+# print(model.get_config()['layers'][0]['config']['output_dim'])
+
+# for i in range(1, len(model.layers)):
+    # model._layers[i].set_weights(temp_model._layers[i].get_weights())
+# model._layers[0].set_weights(temp_model._layers[0].get_weights())
+# model._layers[2].set_weights(temp_model._layers[1].get_weights())
+
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
 # es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
 # mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
 # history = model.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
-print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
 
-# test_loss, test_acc = model.evaluate(x_test, y_test)
-# print('test loss:', test_loss, 'test acc:', test_acc)
-gold_en = y_test_en
-predicted_en = model.predict(x_test_en).argmax(axis=1)
-gold_de = y_test_de
-predicted_de = model.predict(x_test_de).argmax(axis=1)
+print(model.layers[0].get_weights()[0].shape)
+print(model.summary())
 
-print('sample en gold:', gold_en[:30])
-print('sample en pred:', predicted_en[:30])
-print('micro en:', f1_score(gold_en, predicted_en, average='micro'))
-print('macro en:', f1_score(gold_en, predicted_en, average='macro'))
+# gold_en = y_test_en
+# predicted_en = model.predict(x_test_en).argmax(axis=1)
+# gold_de = y_test_de
+# predicted_de = model.predict(x_test_de).argmax(axis=1)
 
-print('sample de gold:', gold_de[:30])
-print('sample de pred:', predicted_de[:30])
-print('micro de:', f1_score(gold_de, predicted_de, average='micro'))
-print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
+# print('sample en gold:', gold_en[:30])
+# print('sample en pred:', predicted_en[:30])
+# print('micro en:', f1_score(gold_en, predicted_en, average='micro'))
+# print('macro en:', f1_score(gold_en, predicted_en, average='macro'))
+
+# print('sample de gold:', gold_de[:30])
+# print('sample de pred:', predicted_de[:30])
+# print('micro de:', f1_score(gold_de, predicted_de, average='micro'))
+# print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
 
 # utils.test_evaluation(gold, predicted)
 # utils.test_evaluation(gold2, predicted2)
