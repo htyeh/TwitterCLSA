@@ -39,11 +39,13 @@ https://towardsdatascience.com/twitter-sentiment-analysis-using-fasttext-9ccd044
   b) try downsized De fine-tuning
 6) *fixed [EnDe BWE] (zero-shot)
 7) trainable [EnDe BWE] (zero-shot)
+  a) reasons for underperformance
 8) combine fixed & trainable [EnDe BWE]
   a) *zero-shot
   b) classical
-9) trainable [En BWE], map to [De BWE]
-10) train En EmbLayer, map to De
+** find improvement methods for BWE
+9) trainable [En BWE], map [De BWE] to [En BWE]
+10) train En EmbLayer, map De to En space
   a) MUSE/vecmap
   b) compare mapping evaluation
 11) search for better architecture (e.g. adding a Conv layer) to achieve better results
@@ -92,6 +94,7 @@ Z2      30      128     0.2     2*64      -         64    8     63.60         51
 Z1      30      128     0.2     2*64      -         64    1     62.14         52.14         57.69         34.79
 ZM      30      128     0.2     2*64      -         64    8     63.66         51.02         59.17         40.55
 Z2      30      128     0.2     2*64      -         64    7     64.16         51.26         60.48         50.23
+Z3      30      128     0.2     2*64      -         64    1     63.84         51.98         59.25         47.65
 -------------------------------------------------------------------------------------------------------------------------------------------
 <EN> SemEval oversampled train (oversampled w/ CLARIN neg train) (14079 neg/15533 neu/13724 pos)
 <EN> SemEval full dev (1153 neg/3328 neu/2941 pos)
@@ -147,6 +150,7 @@ setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1
 Z1      30      128     0.2     2*64      -         64    1     60.65         65.44         59.39         44.94         De neu-skewed
 ZM      30      128     0.2     2*64      -         64    10    63.36         66.55         61.82         53.23
 Z2      30      128     0.2     2*64      -         64    10    63.75         66.58         62.25         59.29
+Z3      30      128     0.2     2*64      -         64    1     62.97         68.38         61.27         58.76
 -------------------------------------------------------------------------------------------------------------------------------------------
 <EN> CLARIN oversampled train (16590 neg/16590 neu/16590 pos)
 <EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
@@ -205,7 +209,8 @@ De embs not updated in zero-shot
 fit Tokenizer on train vocab only: train these into sentiment vectors
 merged BWE settings: architecture only trained for 1 epoch
   - try using the updated BWE with an architecture trained on both BWE fixed
-
+generally involving trainable embeddings: architecture stops being trained after 1 epoch
+  - train with BWE fixed -> train with trainable for 1 epoch
 
 
 >>Older results

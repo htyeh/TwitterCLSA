@@ -34,6 +34,8 @@ tokenizer.fit_on_texts(train_texts + dev_texts + test_texts + de_train_texts + d
 with open('tokenizer.pickle', 'wb') as tokenizer_output:
     pickle.dump(tokenizer, tokenizer_output, protocol=pickle.HIGHEST_PROTOCOL)
 print('Tokenizer object exported')
+# with open('tokenizer.pickle', 'rb') as tokenizer_input:
+    # tokenizer = pickle.load(tokenizer_input)
 # tokenizer_json = tokenizer.to_json()
 # with open('tokenizer.json', 'w') as dumpfile:
 #     json.dump(tokenizer_json, dumpfile)
@@ -110,9 +112,10 @@ embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedd
 # build model
 model = models.Sequential()
 # model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
-model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=False, input_length=MAXLEN))
+model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=True, input_length=MAXLEN))
 # model.add(layers.Conv1D(128, 2, padding='same', activation='relu'))
 # model.add(layers.MaxPooling1D(2))
+# model.add(layers.Flatten())
 model.add(layers.Bidirectional(layers.LSTM(128)))
 model.add(layers.Dropout(0.2))
 model.add(layers.Dense(64, activation='relu'))
@@ -121,7 +124,7 @@ model.add(layers.Dense(3, activation='softmax'))
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
 es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-# history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
 print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
 
 # test_loss, test_acc = model.evaluate(x_test, y_test)

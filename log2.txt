@@ -112,16 +112,22 @@ C2      train 30      128     0.2     2*64      -         64    9         -     
 C3      train 30      128     0.2     2*64      -         64    1         -         62.96         57.08         61.29         49.56
         tune  30      128     0.2     2*64      -         64    -         1         60.25         56.69         57.63         46.63
 -------------------------------------------------------------------------------------------------------------------------------------------
-< same zero-shot results copied from log.txt to compare with classical settings >
-<EN> CLARIN full train (8696 neg/16590 neu/9415 pos)
-<EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
-<EN> CLARIN full test (1863 neg/3555 neu/2019 pos)
-<DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
-setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-Z1      30      128     0.2     2*64      -         64    1     60.99         54.78         59.21         32.43
-ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
-Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
-Z3      30      128     0.2     2*64      -         64    1     62.33         55.64         60.41         48.26
+< fine-tuning compared with zero-shot scores >
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch epoch               F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+ZM            30      128     0.2     2*64      -         64    10                  63.19         54.08         61.53         41.57
+Z1            30      128     0.2     2*64      -         64    1                   60.99         54.78         59.21         32.43
+C1      train 30      128     0.2     2*64      -         64    1         -         61.29         54.28         59.09         32.60
+        tune  30      128     0.2     2*64      -         64    -         1         60.97         55.79         58.01         45.13
+
+Z2            30      128     0.2     2*64      -         64    8                   63.13         56.71         61.31         50.85
+C2      train 30      128     0.2     2*64      -         64    9         -         63.68         57.29         61.02         50.28
+        tune  30      128     0.2     2*64      -         64    -         2         61.52         60.03         58.94         51.87
+
+Z3            30      128     0.2     2*64      -         64    1                   62.33         55.64         60.41         48.26
+C3      train 30      128     0.2     2*64      -         64    1         -         62.96         57.08         61.29         49.56
+        tune  30      128     0.2     2*64      -         64    -         1         60.25         56.69         57.63         46.63
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -152,11 +158,14 @@ FIXED + TRAINED EnDeBWE (Z4 & C4)
 < without loading pre-trained model >
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
 <DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
-setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-Z4      30      128     0.2     2*64      -         64    1     62.86         57.47         60.73         50.66
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch epoch               F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z4            30      128     0.2     2*64      -         64    1                   62.86         57.47         60.73         50.66
 setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 C4      train 30      128     0.2     2*64      -         64    1         -         62.87         54.38         61.83         50.48
         tune  30      128     0.2     2*64      -         64    -         1         61.82         57.45         60.88         50.11
+-------------------------------------------------------------------------------------------------------------------------------------------
+< comparison to Z2 & Z3 >
+** in other settings fine-tuning outperforms zero-shot --> possibly caused by undertraining of the architecture
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
