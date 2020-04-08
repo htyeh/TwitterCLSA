@@ -11,6 +11,8 @@ import numpy as np
 from sklearn.metrics import f1_score
 import pickle
 import utils
+from keras import backend as K
+from keras.optimizers import Adam
 
 # train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 # dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
@@ -98,10 +100,14 @@ EMBEDDING_DIM = 100
 
 # build model
 model = models.load_model('best_model.h5', compile=False)
+# Adam = Adam(learning_rate=0.01)
+# model.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
+# model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
+# print(K.eval(model.optimizer.lr))
 print(model.summary())
-es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
-mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-history = model.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+# es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
+# mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
+# history = model.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
 print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
 
 # test_loss, test_acc = model.evaluate(x_test, y_test)

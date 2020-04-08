@@ -125,7 +125,58 @@ Z3      30      128     0.2     2*64      -         64    1     62.33         55
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
+LEARNING RATE ADJUSTMENT IN FINE-TUNING
+-------------------------------------------------------------------------------------------------------------------------------------------
+< Adam default=0.001 >
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+setting LR      MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+C2      0.01    30      128     0.2     2*64      -         64    1     59.27         60.43         55.16         48.62
+C2      0.001   30      128     0.2     2*64      -         64    3     62.07         59.42         60.76         52.22
+C2      0.0001  30      128     0.2     2*64      -         64    2     62.09         59.22         60.89         52.16
+C2      e-5     30      128     0.2     2*64      -         64    1     62.15         59.21         60.94         52.14
+C2      e-6     30      128     0.2     2*64      -         64    1     62.15         59.19         60.94         52.12
+** observation: LR lower than default causes slower forgetting/learning for EN/DE
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
 FIXED + TRAINED EnDeBWE (Z4 & C4)
 -------------------------------------------------------------------------------------------------------------------------------------------
 < notes >
-** adjustment to ModelCheckpoint: save_weights_only to True
+** input Tweet is passed into 2 separate EmbLayers, one of them updated during training
+** BiLSTM input mismatch when using 200-dim merged BWE in Sequential is solved by applying sep. EmbLayers in the functional API
+** C4 would use the 10% De Tweets to fine-tune
+** since one EmbLayer is updated, its weights are optimized after only 1 epoch, this can cause the rest of the model to be undertrained
+** alternatively try training with both EmbLayer fixed, load model to perform Z4 & C4
+-------------------------------------------------------------------------------------------------------------------------------------------
+< without loading pre-trained model >
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z4      30      128     0.2     2*64      -         64    1     62.86         57.47         60.73         50.66
+setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+C4      train 30      128     0.2     2*64      -         64    1         -         62.87         54.38         61.83         50.48
+        tune  30      128     0.2     2*64      -         64    -         1         61.82         57.45         60.88         50.11
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+SIZE OF FINE-TUNING DATASET VS PERFORMANCE
+-------------------------------------------------------------------------------------------------------------------------------------------
+< fine-tuning with full DE CLARIN >
+setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+C1      train 30      128     0.2     2*64      -         64    1         -         60.93         53.98         59.32         33.26
+        tune  30      128     0.2     2*64      -         64    -         1         60.56         57.43         57.34         51.52
+C2      train 30      128     0.2     2*64      -         64    11        -         63.15         55.64         61.64         50.26
+        tune  30      128     0.2     2*64      -         64    -         2         60.94         60.04         59.16         54.18
+C3      train 30      128     0.2     2*64      -         64    1         -         62.57         55.53         61.02         49.29
+        tune  30      128     0.2     2*64      -         64    -         1         59.98         57.87         59.29         53.05
+< fine-tuning with 10% DE CLARIN >
+setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+C1      train 30      128     0.2     2*64      -         64    1         -         61.29         54.28         59.09         32.60
+        tune  30      128     0.2     2*64      -         64    -         1         60.97         55.79         58.01         45.13
+C2      train 30      128     0.2     2*64      -         64    9         -         63.68         57.29         61.02         50.28
+        tune  30      128     0.2     2*64      -         64    -         2         61.52         60.03         58.94         51.87
+C3      train 30      128     0.2     2*64      -         64    1         -         62.96         57.08         61.29         49.56
+        tune  30      128     0.2     2*64      -         64    -         1         60.25         56.69         57.63         46.63
+C4      train 30      128     0.2     2*64      -         64    1         -         62.87         54.38         61.83         50.48
+        tune  30      128     0.2     2*64      -         64    -         1         61.82         57.45         60.88         50.11

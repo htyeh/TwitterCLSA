@@ -98,70 +98,52 @@ EMBEDDING_DIM = 100
 # merged_embs = np.concatenate((embedding_matrix1, embedding_matrix2), axis=1)
 
 temp_model = models.load_model('sample_model.h5', compile=False)
-# print(temp_model.get_config())
-# temp_model._layers.pop(0)
-# temp_model._layers.pop(0)
-# print(temp_model.layers[0].get_weights()[0].shape)
-print(temp_model.get_config()['layers'][0]['config']['output_dim'])
-temp_model.get_config()['layers'][0]['config']['output_dim'] = 200
-temp_model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
-print(temp_model.get_config()['layers'][0]['config']['output_dim'])
-for layer in temp_model._layers:
-    print(layer)
+temp_weights = []
+for i in range(len(temp_model.layers)):
+    temp_weights.append(temp_model.layers[i].get_weights())
 
-# model = models.Sequential([layers.Embedding(10, 200, input_length=MAXLEN)] + [layer for layer in temp_model.layers[1:]])
+toy_embedding_matrix = np.zeros((vocab_size, 100))
+# model = models.Sequential([temp_model.layers[0], emblayer2] + [layer for layer in temp_model.layers[1:]])
 
 model = models.Sequential()
-model.add(layers.Embedding(vocab_size, 200, trainable=False, input_length=MAXLEN))
-# model.add(layers.Embedding(vocab_size, 200, weights=[merged_embs], trainable=False, input_length=MAXLEN))
-# model.add(layers.Bidirectional(layers.LSTM(128)))
-# model.add(layers.Dropout(0.2))
+model.add(layers.Embedding(vocab_size, 100, trainable=False, input_length=MAXLEN))
+model.add(layers.Flatten())
+model.add(layers.Embedding(vocab_size, 100, weights=[toy_embedding_matrix], trainable=False))
+model.add(layers.Bidirectional(layers.LSTM(128)))
+model.add(layers.Dropout(0.2))
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(3, activation='softmax'))
-model._layers[1].batch_input_shape = (10, 200)
-model.load_weights('sample_weights.h5')
-# set weights
-# print(model.get_config()['layers'][0]['config']['output_dim'])
 
-# for i in range(1, len(model.layers)):
-    # model._layers[i].set_weights(temp_model._layers[i].get_weights())
-# model._layers[0].set_weights(temp_model._layers[0].get_weights())
-# model._layers[2].set_weights(temp_model._layers[1].get_weights())
+for i in range(3, len(model.layers)):
+    model.layers[i].set_weights(temp_weights[i-1])
 
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
+
+# model.load_weights('sample_weights.h5')
+# model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
 # es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
 # mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
 # history = model.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
-
-print(model.layers[0].get_weights()[0].shape)
 print(model.summary())
+print(model.layers[0].get_weights()[0].shape)
+print(model.layers[0].get_weights()[0])
+print(model.layers[1].get_weights()[0].shape)
+print(model.layers[1].get_weights()[0])
 
-# gold_en = y_test_en
-# predicted_en = model.predict(x_test_en).argmax(axis=1)
-# gold_de = y_test_de
-# predicted_de = model.predict(x_test_de).argmax(axis=1)
+gold_en = y_test_en
+predicted_en = model.predict(x_test_en).argmax(axis=1)
+gold_de = y_test_de
+predicted_de = model.predict(x_test_de).argmax(axis=1)
 
-# print('sample en gold:', gold_en[:30])
-# print('sample en pred:', predicted_en[:30])
-# print('micro en:', f1_score(gold_en, predicted_en, average='micro'))
-# print('macro en:', f1_score(gold_en, predicted_en, average='macro'))
+print('sample en gold:', gold_en[:30])
+print('sample en pred:', predicted_en[:30])
+print('micro en:', f1_score(gold_en, predicted_en, average='micro'))
+print('macro en:', f1_score(gold_en, predicted_en, average='macro'))
 
-# print('sample de gold:', gold_de[:30])
-# print('sample de pred:', predicted_de[:30])
-# print('micro de:', f1_score(gold_de, predicted_de, average='micro'))
-# print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
+print('sample de gold:', gold_de[:30])
+print('sample de pred:', predicted_de[:30])
+print('micro de:', f1_score(gold_de, predicted_de, average='micro'))
+print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
 
 # utils.test_evaluation(gold, predicted)
 # utils.test_evaluation(gold2, predicted2)
-
-# toy tests
-# toy_sents = tokenizer.texts_to_sequences(['the cat sat on the mat', 'what a great movie', 'better not again', 'terrible, worst ever', 'best film ever', 'today is Tuesday'])
-# toy_data = pad_sequences(toy_sents, maxlen=MAXLEN)
-# toy_gold = [1, 2, 0, 0, 2, 1]
-# prediction = model.predict(toy_data)
-# print(toy_gold)
-# print(prediction.argmax(axis=1))
-
-# plot results
-# utils.plot(history)

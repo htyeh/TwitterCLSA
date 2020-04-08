@@ -12,11 +12,12 @@ from sklearn.metrics import f1_score
 import pickle, json
 import utils
 
+FINETUNE = False
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
-de_train_dir = './TWEETS/CLEAN/DE_CLARIN_full/train'
-de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
+de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small10/train'
+de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_small10/dev'
 de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
 train_texts, train_labels = utils.load_data(train_dir)
 dev_texts, dev_labels = utils.load_data(dev_dir)
@@ -87,8 +88,12 @@ x_val = dev_data
 y_val = dev_labels
 x_test = test_data
 y_test = test_labels
-x_test2 = de_test_data
-y_test2 = de_test_labels
+x_train_de = de_train_data
+y_train_de = de_train_labels
+x_val_de = de_dev_data
+y_val_de = de_dev_labels
+x_test_de = de_test_data
+y_test_de = de_test_labels
 
 # tests
 print(x_train[:3])
@@ -103,41 +108,65 @@ embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
 embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
 
 # build model
-model = models.Sequential()
-# model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
-model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=False, input_length=MAXLEN))
-model.add(layers.Bidirectional(layers.LSTM(128)))
-model.add(layers.Dropout(0.2))
-model.add(layers.Dense(64, activation='relu'))
-model.add(layers.Dense(64, activation='relu'))
-model.add(layers.Dense(3, activation='softmax'))
+input_layer = layers.Input(shape=(MAXLEN,))
+emb1out = layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=False, input_length=MAXLEN)(input_layer)
+emb2out = layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=True, input_length=MAXLEN)(input_layer)
+merged_embs = layers.concatenate([emb1out, emb2out])
+bilstm_out = layers.Bidirectional(layers.LSTM(128))(merged_embs)
+dropout = layers.Dropout(0.2)(bilstm_out)
+dense1 = layers.Dense(64, activation='relu')(dropout)
+dense2 = layers.Dense(64, activation='relu')(dense1)
+output_layer = layers.Dense(3, activation='softmax')(dense2)
+model = models.Model(inputs=input_layer, outputs=output_layer)
+
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
 es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
-mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True, save_weights_only=True)
+mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True, save_weights_only=False)
 history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
-print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
+# print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
+# utils.list_layers(model)
+# print(model.layers[3].output_shape)
 
-model2 = models.load_model('best_model.h5', compile=False)
+gold_en = y_test
+predicted_en = model.predict(x_test).argmax(axis=1)
+gold_de = y_test_de
+predicted_de = model.predict(x_test_de).argmax(axis=1)
 
+print('sample en gold:', gold_en[:30])
+print('sample en pred:', predicted_en[:30])
+print('micro en:', f1_score(gold_en, predicted_en, average='micro'))
+print('macro en:', f1_score(gold_en, predicted_en, average='macro'))
 
+print('sample de gold:', gold_de[:30])
+print('sample de pred:', predicted_de[:30])
+print('micro de:', f1_score(gold_de, predicted_de, average='micro'))
+print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
 
-gold = y_test
-predicted = model.predict(x_test).argmax(axis=1)
-gold2 = y_test2
-predicted2 = model.predict(x_test2).argmax(axis=1)
+# de fine-tuning
+if FINETUNE:
+    print('performing classical fine-tuning...')
+    print('train:', de_train_dir)
+    print('dev:', de_dev_dir)
+    model2 = models.load_model('best_model.h5', compile=True)
+    es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
+    mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True, save_weights_only=False)
+    history = model2.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
 
-print('sample en gold:', gold[:30])
-print('sample en pred:', predicted[:30])
-print('micro en:', f1_score(gold, predicted, average='micro'))
-print('macro en:', f1_score(gold, predicted, average='macro'))
+    gold_en = y_test
+    predicted_en = model2.predict(x_test).argmax(axis=1)
+    gold_de = y_test_de
+    predicted_de = model2.predict(x_test_de).argmax(axis=1)
 
-print('sample de gold:', gold2[:30])
-print('sample de pred:', predicted2[:30])
-print('micro de:', f1_score(gold2, predicted2, average='micro'))
-print('macro de:', f1_score(gold2, predicted2, average='macro'))
+    print('sample en gold:', gold_en[:30])
+    print('sample en pred:', predicted_en[:30])
+    print('micro en:', f1_score(gold_en, predicted_en, average='micro'))
+    print('macro en:', f1_score(gold_en, predicted_en, average='macro'))
 
-# utils.test_evaluation(gold, predicted)
-# utils.test_evaluation(gold2, predicted2)
+    print('sample de gold:', gold_de[:30])
+    print('sample de pred:', predicted_de[:30])
+    print('micro de:', f1_score(gold_de, predicted_de, average='micro'))
+    print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
+    
 
 # toy tests
 # toy_sents = tokenizer.texts_to_sequences(['the cat sat on the mat', 'what a great movie', 'better not again', 'terrible, worst ever', 'best film ever', 'today is Tuesday'])

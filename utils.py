@@ -139,13 +139,18 @@ def test_evaluation(gold, predicted):
 #     micro_f1 = 2 * (micro_precision * micro_recall) / (micro_precision + micro_recall)
 #     return micro_f1
 
-def f1(y_true, y_pred):
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
-    recall = true_positives / (possible_positives + K.epsilon())
-    precision = true_positives / (predicted_positives + K.epsilon())
-    return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
+# def f1(y_true, y_pred):
+#     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+#     possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+#     predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+#     recall = true_positives / (possible_positives + K.epsilon())
+#     precision = true_positives / (predicted_positives + K.epsilon())
+#     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
+
+def list_layers(model):
+    print('listing layers...')
+    for i, layer in enumerate(model.layers):
+        print(i, layer)
 
 def plot(history):
     acc = history.history['acc']
