@@ -43,12 +43,16 @@ https://towardsdatascience.com/twitter-sentiment-analysis-using-fasttext-9ccd044
 8) combine fixed & trainable [EnDe BWE]
   a) *zero-shot
   b) classical
-** find improvement methods for BWE
-9) trainable [En BWE], map [De BWE] to [En BWE]
-10) train En EmbLayer, map De to En space
+9) BWE + architecture joint enhancement
+  a) ArchEnhancer (train architecture, then implement BWE tuning)
+  b) EmbEnhancer (train embs, then rest of architecture)
+10) sentiment-tuning potential: are tuned embs really worse?
+  a) build vocab only on train-data
+11) trainable [En BWE], map [De BWE] to [En BWE]
+12) train En EmbLayer, map De to En space
   a) MUSE/vecmap
   b) compare mapping evaluation
-11) search for better architecture (e.g. adding a Conv layer) to achieve better results
+
 * only En part of [EnDe BWE] get updates (no training on De vocab)
 
 >Experiment settings (C-classical transfer, Z-zero-shot transfer)
@@ -140,7 +144,7 @@ setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1
 Z1      30      128     0.2     2*64      -         64    1     60.99         54.78         59.21         32.43
 ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
 Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
-Z3      30      128     0.2     2*64      -         64    1     62.33         55.64         60.41         48.26
+Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
 -------------------------------------------------------------------------------------------------------------------------------------------
 <EN> CLARIN full train (8696 neg/16590 neu/9415 pos)
 <EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
@@ -200,13 +204,14 @@ Z2      10      128     0.5     4*32      -         32      9     56.77         
 Z2      10      256     0.5     4*64      -         32      6     56.75         58.80
 
 
->Issues to address
+>Issues/experiments to address
 Tokenizer does not recognize De vocabs
   - fit_on_texts on both train(En) and test(De)
 low validation score
 En: only vocab seen in training updated (generalization problem)
 De embs not updated in zero-shot
-fit Tokenizer on train vocab only: train these into sentiment vectors
+1 reason for bad performance with updated embs: unable to generalize when only training embs updated
+  - fit Tokenizer on train vocab only: train these into sentiment vectors
 merged BWE settings: architecture only trained for 1 epoch
   - try using the updated BWE with an architecture trained on both BWE fixed
 generally involving trainable embeddings: architecture stops being trained after 1 epoch

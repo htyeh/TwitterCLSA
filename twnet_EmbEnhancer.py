@@ -106,36 +106,44 @@ print(x_test[:3])
 EMBEDDING_DIM = 100
 
 embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/crosslingual_EN-DE_english_twitter_100d_weighted.txt.w2v')
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.200d.txt', dim=EMBEDDING_DIM)
 
 embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
 
-# build model
+# optimize BWE
+print('optimizing EmbLayer...')
 model = models.Sequential()
 # model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
 model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=True, input_length=MAXLEN))
-# model.add(layers.Conv1D(128, 2, padding='same', activation='relu'))
-# model.add(layers.MaxPooling1D(2))
-# model.add(layers.Flatten())
 model.add(layers.Bidirectional(layers.LSTM(128)))
 model.add(layers.Dropout(0.2))
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(3, activation='softmax'))
-# Adam = optimizers.Adam(learning_rate=0.0001)
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
-es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
+Adam = optimizers.Adam(learning_rate=0.0001)
+model.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
+print(model.summary())
+print('LR:', K.eval(model.optimizer.lr))
+es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=0, restore_best_weights=True, verbose=1)
 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
 print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
 
-# test_loss, test_acc = model.evaluate(x_test, y_test)
-# print('test loss:', test_loss, 'test acc:', test_acc)
+# freeze BWE
+print('continuing training with frozen EmbLayer...')
+model2 = models.load_model('best_model.h5', compile=False)
+model2.layers[0].trainable = False
+model2.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
+print(model2.summary())
+print('LR:', K.eval(model2.optimizer.lr))
+es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
+mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
+model2.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
+
 gold_en = y_test
-predicted_en = model.predict(x_test).argmax(axis=1)
+predicted_en = model2.predict(x_test).argmax(axis=1)
 gold_de = y_test_de
-predicted_de = model.predict(x_test_de).argmax(axis=1)
+predicted_de = model2.predict(x_test_de).argmax(axis=1)
 
 print('sample en gold:', gold_en[:30])
 print('sample en pred:', predicted_en[:30])
