@@ -194,9 +194,11 @@ Z3      30      128     0.2     2*64      -         64    1     62.03         55
 Z4      30      128     0.2     2*64      -         64    1     62.45         55.86         60.54         50.56
 ** observation: sentiment-tuning (train-vocab) BWE does not provide better performance
 
+
 -------------------------------------------------------------------------------------------------------------------------------------------
-EFFECT OF LR ON OPTIMIZING EMBEDDINGS
+EMB/ARCHITECTURE JOINT OPTIMIZATION
 -------------------------------------------------------------------------------------------------------------------------------------------
+< effect of LR on optimizing embeddings >
 < adjusting Adam LR for optimizing BWE >
 < Adam default=0.001 >
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
@@ -208,13 +210,16 @@ Z3      0.00001 30      128     0.2     2*64      -         64    12    60.74   
 -------------------------------------------------------------------------------------------------------------------------------------------
 < experiments with EmbEnhancer: notes >
 ** when embs are updated, their weights are optimized after only 1 epoch, this can cause the rest of the model to be undertrained
-** alternative 1 (ArchEnhancer): train with EmbLayer fixed, load model to tune embs further
-** alternative 2 (EmbEnhancer): update embs, load model to train architecture further
+** alternative 1 (EmbEnhancer): update embs, load model to train architecture further
   ** model1: the EmbLayer is trained while EarlyStopping patience set to 0
   ** model2: EmbLayer is frozen and architecture is trained
-  ** Enh.settings should be compared with corresponding 'fixed EmbLayer' settings, e.g. Z2
+** alternative 2 (ArchEnhancer): train with EmbLayer fixed, load model to tune embs further
+  ** model1: architecture trained with EmbLayer frozen
+  ** model2: unfreeze EmbLayer and tune model (freeze other layers?)
+** Enh.settings should be compared with corresponding 'fixed EmbLayer' settings, e.g. Z2
 -------------------------------------------------------------------------------------------------------------------------------------------
 < experiments with EmbEnhancer compared with same settings w/o Enhancer >
+** note: embs tuned w/ LR lowered (e-4), for architecture training default e-3 & e-4 LR are tried out
 setting LR(emb) LR(arch)  MAXLEN  bilstm  dropout dense     dropouts  bat.  epo(emb)  epo(arch) En-micro  De-micro  En-macro  De-macro
 Z1      -       e-3       30      128     0.2     2*64      -         64    -         1         60.99     54.78     59.21     32.43
 Z2      -       e-3       30      128     0.2     2*64      -         64    -         8         63.13     56.71     61.31     50.85
@@ -226,6 +231,50 @@ Z2      -       e-3       30      128     0.2     2*64      -         64    -   
 Enh.Z3  e-4     e-3       30      128     0.2     2*64      -         64    2         2         61.53     48.62     60.47     47.08
 Enh.Z3  e-4     e-4       30      128     0.2     2*64      -         64    2         4         62.12     48.01     61.04     46.13
 
-** observation: if the hypothesis 'trainable EmbLayer is NOT beneficial' is correct, Enh. should perform better than corresponding 'trainable EmbLayer' setting and worse than corresponding 'fixed EmbLayer' setting
-** observation: Enh. versions of settings Z1 & Z3 (meaning: tuned embs + trained with EmbLayer fixed) perform worse than original embs + trained with EmbLayer fixed
-** observation: Enh. versions also worse than original Z1 & Z3, this might be irrelevant as Enh. versions are trained for 1 more epoch only
+Z4      -       e-3       30      128     0.2     2*64      -         64    -         1         62.45     55.86     60.54     50.56
+Z2      -       e-3       30      128     0.2     2*64      -         64    -         8         63.13     56.71     61.31     50.85
+Enh.Z4  e-4     e-3       30      128     0.2     2*64      -         64    2         2         60.56     48.43     59.99     47.12
+Enh.Z4  e-4     e-4       30      128     0.2     2*64      -         64    2         3         61.48     51.74     60.34     49.87
+
+** observation: if the hypothesis 'trainable EmbLayer is NOT beneficial' is correct, Enh. should perform better than corresponding 'trainable EmbLayer' setting and worse than corresponding 'fixed EmbLayer' (Z2) setting
+** observation: Enh. versions of Z1/Z3/Z4 (meaning: tuned embs + trained with EmbLayer fixed) perform worse than Z2 (fixed EmbLayer)
+** observation: Enh. versions of Z1/Z3/Z4 also worse than original Z1/Z3/Z4, this might be irrelevant as Enh. versions are trained for 1 more epoch only
+-------------------------------------------------------------------------------------------------------------------------------------------
+< experiments with ArchEnhancer: notes >
+** with the tuned embs, architectures in EmbEnhacer seem to train for few epochs
+** architecture trained with default e-3 LR, embs tuned w/ LR lowered (e-4)
+** in the emb-tuning step all other layers are frozen
+** in classical transfer settings: De data used to first tune architecture, then embs, same as in En part
+-------------------------------------------------------------------------------------------------------------------------------------------
+< experiments with ArchEnhancer compared with same settings w/o Enhancer >
+setting LR(arch)  LR(emb) MAXLEN  bilstm  dropout dense     dropouts  bat.  epo(arch) epo(emb) En-micro  De-micro  En-macro  De-macro
+Z3      e-3       -       30      128     0.2     2*64      -         64    1         -         62.03     55.38     60.71     49.62
+Z2      e-3       -       30      128     0.2     2*64      -         64    8         -         63.13     56.71     61.31     50.85
+Enh.Z3  e-3       e-4     30      128     0.2     2*64      -         64    7         1         64.48     56.10     63.11     50.42
+*Enh.Z3 e-3       e-4     30      128     0.2     2*64      -         64    10        1         64.01     56.28     62.72     50.53
+* w/o rest of layers frozen
+
+Z4      e-3       -       30      128     0.2     2*64      -         64    1         -         62.45     55.86     60.54     50.56
+Z2      e-3       -       30      128     0.2     2*64      -         64    8         -         63.13     56.71     61.31     50.85
+Enh.Z4  e-3       e-4     30      128     0.2     2*64      -         64    8         3         64.05     57.41     62.72     51.02
+
+** observation: contrary to what EmbEnhancer seems to prove, tuned embs in this setting improves performance (comp. Z2 with Enh.Z3/Z4)
+** observation: if tuned beforehand, sentiment-embs limit the capacity of arch. training and thus worsen the performance
+** hypothesis: problems tuning embs with architecture fixed?
+
+setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epo-en(arch,emb)  epo-de(arch,emb)  En-micro  De-micro  En-macro  De-macro
+C3      train 30      128     0.2     2*64      -         64    1,-               -,-               62.96     57.08     61.29     49.56
+        tune  30      128     0.2     2*64      -         64    -,-               1,-               60.25     56.69     57.63     46.63
+C2      train 30      128     0.2     2*64      -         64    9,-               -,-               63.68     57.29     61.02     50.28
+        tune  30      128     0.2     2*64      -         64    -,-               2,-               61.52     60.03     58.94     51.87
+Enh.C3  train 30      128     0.2     2*64      -         64    9,2               -,-               64.34     55.94     63.05     50.25
+        tune  30      128     0.2     2*64      -         64    -,-               2,1               62.29     60.07     61.09     52.83
+
+C4      train 30      128     0.2     2*64      -         64    1,-               -,-               62.87     54.38     61.83     50.48
+        tune  30      128     0.2     2*64      -         64    -,-               1,-               61.82     57.45     60.88     50.11
+C2      train 30      128     0.2     2*64      -         64    9,-               -,-               63.68     57.29     61.02     50.28
+        tune  30      128     0.2     2*64      -         64    -,-               2,-               61.52     60.03     58.94     51.87
+Enh.C4  train 30      128     0.2     2*64      -         64
+        tune  30      128     0.2     2*64      -         64
+
+** observation: Enh.C3 outperforms setting C2 w/ fixed BWE
