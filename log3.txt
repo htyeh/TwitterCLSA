@@ -1,0 +1,32 @@
+-------------------------------------------------------------------------------------------------------------------------------------------
+EXPERIMENT SETTINGS IN THIS LOG
+-------------------------------------------------------------------------------------------------------------------------------------------
+(M-monolingual, C-classical transfer, Z-zero-shot transfer)
+Z5: En train/dev/test, [En BWE]; map [De BWE] to [En BWE]; De test (zero-shot)
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+< Z5 setting: notes >
+** only EnBWE is loaded, monolingual training using En data
+** trained EnBWE is saved, DeBWE is mapped to the EnBWE space
+** evaluation on the merged EnDeBWE
+** this setting should be compared with Z3 (trainable EnBWE) and C3 (trainable EnBWE + fine-tuned DeBWE)
+** modification to MUSE unsupervised: decrease epoch_size to 100000, default emb_dim=100
+** cmd: python3 unsupervised.py --src_lang de --tgt_lang en --src_emb crosslingual_EN-DE_german_twitter_100d_weighted.txt.w2v --tgt_emb trained_en_embs.txt --n_refinement 5
+-------------------------------------------------------------------------------------------------------------------------------------------
+< Z5: steps >
+e-4 LR
+twnet_Z5 saves updated EnBWE with corresponding words
+53626 vocabs found in En data
+412776 De embs to map
+new joint BWE created with merger
+EN_DE_Z5 fed into twnet
+
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
+Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
+Z4      30      128     0.2     2*64      -         64    1     62.45         55.86         60.54         50.56
+Z5      30      128     0.2     2*64      -         64    2     61.20         50.88         60.12         49.14
+
+** observation: mapping DeBWE to the trained EnBWE space decreased performance of De
+** observation: decrease in performance of En could be attributed to the averaging during merging

@@ -1,4 +1,7 @@
->Experiment settings (M-monolingual, C-classical transfer, Z-zero-shot transfer)
+-------------------------------------------------------------------------------------------------------------------------------------------
+EXPERIMENT SETTINGS IN THIS LOG
+-------------------------------------------------------------------------------------------------------------------------------------------
+(M-monolingual, C-classical transfer, Z-zero-shot transfer)
 M1: EmbLayer
 M2: [EnDe BWE] fixed
 M3: [EnDe BWE] trainable
@@ -6,11 +9,11 @@ Z1: En train/dev/test, EmbLayer; De test (zero-shot) -> De vocab should have ran
 ZM: En train/dev/test, [En BWE]; De test (zero-shot) -> De vocab should have all 0 embeddings
 Z2: En train/dev/test, [EnDe BWE] fixed; De test (zero-shot)
 Z3: En train/dev/test, [EnDe BWE] trainable; De test (zero-shot)
-Z4: En train/dev/test, [EnDe BWE][EnDe BWE trained]; De test (zero-shot)
+Z4: En train/dev/test, [EnDe BWE fixed][EnDe BWE trainable]; De test (zero-shot)
 C1: En train/dev/test, EmbLayer; De train/dev/test (fine-tuning)
 C2: En train/dev/test, [EnDe BWE] fixed; De train/dev/test (fine-tuning)
 C3: En train/dev/test, [EnDe BWE] trainable; De train/dev/test (fine-tuning)
-*C4: En train/dev/test, [EnDe BWE][EnDe BWE trained]; De train/dev/test (fine-tuning)
+C4: En train/dev/test, [EnDe BWE fixed][EnDe BWE trainable]; De train/dev/test (fine-tuning)
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -238,7 +241,7 @@ Enh.Z4  e-4     e-4       30      128     0.2     2*64      -         64    2   
 
 ** observation: if the hypothesis 'trainable EmbLayer is NOT beneficial' is correct, Enh. should perform better than corresponding 'trainable EmbLayer' setting and worse than corresponding 'fixed EmbLayer' (Z2) setting
 ** observation: Enh. versions of Z1/Z3/Z4 (meaning: tuned embs + trained with EmbLayer fixed) perform worse than Z2 (fixed EmbLayer)
-** observation: Enh. versions of Z1/Z3/Z4 also worse than original Z1/Z3/Z4, this might be irrelevant as Enh. versions are trained for 1 more epoch only
+** observation: Enh. versions of Z1/Z3/Z4 also worse than original Z1/Z3/Z4, this is either irrelevant as Enh. versions are trained for 1 more epoch only, or the trained embs affect the ability of the rest layers to learn
 -------------------------------------------------------------------------------------------------------------------------------------------
 < experiments with ArchEnhancer: notes >
 ** with the tuned embs, architectures in EmbEnhacer seem to train for few epochs
@@ -274,7 +277,10 @@ C4      train 30      128     0.2     2*64      -         64    1,-             
         tune  30      128     0.2     2*64      -         64    -,-               1,-               61.82     57.45     60.88     50.11
 C2      train 30      128     0.2     2*64      -         64    9,-               -,-               63.68     57.29     61.02     50.28
         tune  30      128     0.2     2*64      -         64    -,-               2,-               61.52     60.03     58.94     51.87
-Enh.C4  train 30      128     0.2     2*64      -         64
-        tune  30      128     0.2     2*64      -         64
+C3      train 30      128     0.2     2*64      -         64    1,-               -,-               62.96     57.08     61.29     49.56
+        tune  30      128     0.2     2*64      -         64    -,-               1,-               60.25     56.69     57.63     46.63
+Enh.C4  train 30      128     0.2     2*64      -         64    8,2               -,-               64.20     55.82     62.96     50.03
+        tune  30      128     0.2     2*64      -         64    -,-               1,1               62.88     59.97     61.32     51.96
 
-** observation: Enh.C3 outperforms setting C2 w/ fixed BWE
+** observation: Enh.C3 outperforms setting C2 w/ fixed BWE, C3 w/ trainable BWE
+** observation: Enh.C4 outperforms original C4, C2 w/ fixed BWE, C3 w/ trainable BWE

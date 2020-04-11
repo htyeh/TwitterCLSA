@@ -75,6 +75,16 @@ def build_emb_matrix(num_embedding_vocab, embedding_dim, word_index, embeddings_
     print('loaded pre-trained embeddings shape = ', embedding_matrix.shape)
     return embedding_matrix
 
+def save_embs_2_file(model, emblayer_index, word_index, path='trained_embs.txt'):
+    emb_weights = model.layers[emblayer_index].get_weights()[0]
+    word2emb = {word:emb_weights[index] for word, index in word_index.items()}
+    vocab_size = len(word2emb)  # NOT the same as vocab_size in main: does not include UNK
+    embedding_dim = len(emb_weights[0])
+    with open(path, 'w') as output:
+        output.write(str(vocab_size) + ' ' + str(embedding_dim) + '\n')
+        for word, emb in word2emb.items():
+            output.write(word + ' ' + ' '.join([str(item) for item in emb]) + '\n')
+
 def test_evaluation(gold, predicted):
     # gold = y_test; predicted = model.predict(x_test)
     print('sample gold:', gold[:30])

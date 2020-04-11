@@ -14,7 +14,7 @@ import utils
 from keras import optimizers
 import keras.backend as K
 
-FINETUNE = False
+FINETUNE = True
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
@@ -167,17 +167,34 @@ if FINETUNE:
     print('performing classical fine-tuning...')
     print('train:', de_train_dir)
     print('dev:', de_dev_dir)
-    model2 = models.load_model('best_model.h5', compile=True)
-    # Adam = Adam(learning_rate=0.01)
-    # print(K.eval(model.optimizer.lr))
+    print('fine-tuning architecture...')
+    model3 = models.load_model('best_model.h5', compile=False)
+    model3.layers[2].trainable = False  # freeze one EmbLayer
+    for layer in model3.layers[4:]:
+        layer.trainable = True  # unfreeze rest layers
+    model3.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
+    print(K.eval(model3.optimizer.lr))
+    print(model3.summary())
     es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
     mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True, save_weights_only=False)
-    history = model2.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+    model3.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+
+    print('fine-tuning embs...')
+    model4 = models.load_model('best_model.h5', compile=False)
+    model4.layers[2].trainable = True
+    for layer in model4.layers[4:]:
+        layer.trainable = False
+    model4.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
+    print(model4.summary())
+    print('LR:', K.eval(model4.optimizer.lr))
+    es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=0, restore_best_weights=True, verbose=1)
+    mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
+    model4.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
 
     gold_en = y_test
-    predicted_en = model2.predict(x_test).argmax(axis=1)
+    predicted_en = model4.predict(x_test).argmax(axis=1)
     gold_de = y_test_de
-    predicted_de = model2.predict(x_test_de).argmax(axis=1)
+    predicted_de = model4.predict(x_test_de).argmax(axis=1)
 
     print('sample en gold:', gold_en[:30])
     print('sample en pred:', predicted_en[:30])

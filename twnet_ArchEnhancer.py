@@ -14,7 +14,7 @@ import utils
 from keras import optimizers
 import keras.backend as K
 
-FINETUNE = True
+FINETUNE = False
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'

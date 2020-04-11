@@ -29,7 +29,9 @@ https://towardsdatascience.com/twitter-sentiment-analysis-using-fasttext-9ccd044
 7) punctuation removal
 8) converted \u2019 (to '), \u002c (to ,)
 
->Experiment descriptions
+-------------------------------------------------------------------------------------------------------------------------------------------
+COMPLETE EXPERIMENT DESCRIPTION
+-------------------------------------------------------------------------------------------------------------------------------------------
 1) baseline: train/dev/test on De
   a) scale De data & test for overfitting
 2) EmbLayer, test on De directly
@@ -47,20 +49,23 @@ https://towardsdatascience.com/twitter-sentiment-analysis-using-fasttext-9ccd044
 9) BWE + architecture joint enhancement
   a) EmbEnhancer (train embs, then rest of architecture)
   b) ArchEnhancer (train architecture, then implement BWE tuning)
-10) sentiment-tuning potential: are tuned embs really worse?
+10) (optional) sentiment-tuning potential: are tuned embs really worse?
   a) building vocab only on train-data is not useful since most embs will be updated less than others
 11) trainable [En BWE], map [De BWE] to [En BWE]
-12) train En EmbLayer, map De to En space
   a) MUSE/vecmap
   b) compare mapping evaluation
+12) (optional) train En EmbLayer, map De to En space
 
 * only En part of [EnDe BWE] get updates (no training on De vocab)
-
->Experiment settings (C-classical transfer, Z-zero-shot transfer)
+-------------------------------------------------------------------------------------------------------------------------------------------
+EXPERIMENT SETTINGS IN THIS LOG
+-------------------------------------------------------------------------------------------------------------------------------------------
+(C-classical transfer, Z-zero-shot transfer)
 Z1: En train/dev/test, EmbLayer; De test (zero-shot) -> De vocab should have random embeddings
 ZM: En train/dev/test, [En BWE]; De test (zero-shot) -> De vocab should have all 0 embeddings
 Z2: En train/dev/test, [EnDe BWE] fixed; De test (zero-shot)
 Z3: En train/dev/test, [EnDe BWE] trainable; De test (zero-shot)
+
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 <model architecture: bilstm(128) + dropout(0.2) + dense(64) + dense(64)> <batch=64> <setting=Z2>
