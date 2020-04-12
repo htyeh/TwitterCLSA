@@ -1,6 +1,12 @@
 -------------------------------------------------------------------------------------------------------------------------------------------
 EXPERIMENT SETTINGS IN THIS LOG
 -------------------------------------------------------------------------------------------------------------------------------------------
+** results recorded in this log:
+  * compare performance of fine-tuning against zero-shot and monolingual training
+  * compare effects of fine-tuning data size and LR
+  * investigate possibility of combining fixed + trainable BWE
+  * propose possibility of training both BWE and rest of the model
+
 (M-monolingual, C-classical transfer, Z-zero-shot transfer)
 M1: EmbLayer
 M2: [EnDe BWE] fixed
@@ -263,6 +269,7 @@ Enh.Z4  e-3       e-4     30      128     0.2     2*64      -         64    8   
 
 ** observation: contrary to what EmbEnhancer seems to prove, tuned embs in this setting improves performance (comp. Z2 with Enh.Z3/Z4)
 ** observation: if tuned beforehand, sentiment-embs limit the capacity of arch. training and thus worsen the performance
+** observation: ArchEnhancer > fixed BWE > trainable BWE > EmbEnhacer
 ** hypothesis: problems tuning embs with architecture fixed?
 
 setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epo-en(arch,emb)  epo-de(arch,emb)  En-micro  De-micro  En-macro  De-macro

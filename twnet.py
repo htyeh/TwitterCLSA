@@ -106,7 +106,7 @@ print(x_test[:3])
 EMBEDDING_DIM = 100
 
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
-embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE_Z5.txt')
+embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE_supervised.txt')
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/crosslingual_EN-DE_english_twitter_100d_weighted.txt.w2v')
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.200d.txt', dim=EMBEDDING_DIM)
 

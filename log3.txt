@@ -9,6 +9,7 @@ Z5: En train/dev/test, [En BWE]; map [De BWE] to [En BWE]; De test (zero-shot)
 < Z5 setting: notes >
 ** only EnBWE is loaded, monolingual training using En data
 ** trained EnBWE is saved, DeBWE is mapped to the EnBWE space
+  ** Enhancers (embs or architecture) not considered in this setting, entire model trained together
 ** evaluation on the merged EnDeBWE
 ** this setting should be compared with Z3 (trainable EnBWE) and C3 (trainable EnBWE + fine-tuned DeBWE)
 ** modification to MUSE unsupervised: decrease epoch_size to 100000, default emb_dim=100
@@ -20,7 +21,8 @@ twnet_Z5 saves updated EnBWE with corresponding words
 53626 vocabs found in En data
 412776 De embs to map
 new joint BWE created with merger
-EN_DE_Z5 fed into twnet
+442248 embs in EN_DE_Z5_avg
+EN_DE_Z5_avg fed into twnet
 
 setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
@@ -30,3 +32,32 @@ Z5      30      128     0.2     2*64      -         64    2     61.20         50
 
 ** observation: mapping DeBWE to the trained EnBWE space decreased performance of De
 ** observation: decrease in performance of En could be attributed to the averaging during merging
+< a different merger approach >
+** 24154 overlapping vocabs
+** instead of averaging En & De vecs for the same vocab, keep the En version
+Z5      30      128     0.2     2*64      -         64    3     61.73         54.02         60.15         50.00
+** low evaluation score, try supervised
+Z5      30      128     0.2     2*64      -         64    2     62.08         55.11         60.83         51.11
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+< Z5 supervised >
+** cmd: python3 supervised.py --src_lang de --tgt_lang en --src_emb crosslingual_EN-DE_german_twitter_100d_weighted.txt.w2v --tgt_emb trained_en_embs.txt --n_refinement 5 --dico_train default
+-------------------------------------------------------------------------------------------------------------------------------------------
+< Z5 with GloVe Twitter embeddings: unsupervised >
+** very bad evaluation scores with tasks provided in MUSE
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
+Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
+Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
+
+Z5      30      128     0.2     2*64      -         64    3     63.32         56.80         62.01         32.86
+GloVe ZM  30    128     0.2     2*64      -         64    5     62.66         58.43         61.53         38.50
+** comment: De neu-skewed
+
+< Z5 with GloVe Twitter embeddings: supervised >
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z5      30      128     0.2     2*64      -         64    2     63.10         57.21         61.63         37.98
+GloVe ZM  30    128     0.2     2*64      -         64    5     62.66         58.43         61.53         38.50
+** comment: De neu-skewed
+** observation: mapped GloVe offers no significant improvement
+** observation: mapped GloVe does not improve De compared to GloVe ZM (w/o De embeddings)
