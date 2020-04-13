@@ -10,54 +10,93 @@ Z5: En train/dev/test, [En BWE]; map [De BWE] to [En BWE]; De test (zero-shot)
 ** only EnBWE is loaded, monolingual training using En data
 ** trained EnBWE is saved, DeBWE is mapped to the EnBWE space
   ** Enhancers (embs or architecture) not considered in this setting, entire model trained together
-** evaluation on the merged EnDeBWE
+** two types of merging identical vocabs considered: averaged & keeping only En
+** evaluation on the merged EnDeBWE (refer to section 'INTRINSIC EVALUATION')
 ** this setting should be compared with Z3 (trainable EnBWE) and C3 (trainable EnBWE + fine-tuned DeBWE)
-** modification to MUSE unsupervised: decrease epoch_size to 100000, default emb_dim=100
-** cmd: python3 unsupervised.py --src_lang de --tgt_lang en --src_emb crosslingual_EN-DE_german_twitter_100d_weighted.txt.w2v --tgt_emb trained_en_embs.txt --n_refinement 5
+** adjuestments to MUSE parameters unsupervised: epoch_size 100000/500000, default emb_dim=100
+** python3 unsupervised.py --src_lang de --tgt_lang en --src_emb crosslingual_EN-DE_german_twitter_100d_weighted.txt.w2v --tgt_emb trained_en_embs.txt --n_refinement 5
+** python3 supervised.py --src_lang de --tgt_lang en --src_emb crosslingual_EN-DE_german_twitter_100d_weighted.txt.w2v --tgt_emb trained_en_embs.txt --n_refinement 5 --dico_train default
 -------------------------------------------------------------------------------------------------------------------------------------------
 < Z5: steps >
 e-4 LR
 twnet_Z5 saves updated EnBWE with corresponding words
 53626 vocabs found in En data
 412776 De embs to map
+24154 overlapping vocabs
 new joint BWE created with merger
-442248 embs in EN_DE_Z5_avg
-EN_DE_Z5_avg fed into twnet
+442248 embs in new joint BWE
+joint BWE fed into twnet
 
 setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
 Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
 Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
 Z4      30      128     0.2     2*64      -         64    1     62.45         55.86         60.54         50.56
+-------------------------------------------------------------------------------------------------------------------------------------------
+a) < epoch_size=100000, unsupervised, merger=averaged >
 Z5      30      128     0.2     2*64      -         64    2     61.20         50.88         60.12         49.14
-
-** observation: mapping DeBWE to the trained EnBWE space decreased performance of De
-** observation: decrease in performance of En could be attributed to the averaging during merging
-< a different merger approach >
-** 24154 overlapping vocabs
-** instead of averaging En & De vecs for the same vocab, keep the En version
+-------------------------------------------------------------------------------------------------------------------------------------------
+b) < epoch_size=100000, unsupervised, merger=keep_en >
 Z5      30      128     0.2     2*64      -         64    3     61.73         54.02         60.15         50.00
-** low evaluation score, try supervised
+-------------------------------------------------------------------------------------------------------------------------------------------
+c) < epoch_size=500000, unsupervised, merger=averaged >
+Z5      30      128     0.2     2*64      -         64    2     61.29         51.88         60.07         49.89
+-------------------------------------------------------------------------------------------------------------------------------------------
+d) < epoch_size=500000, unsupervised, merger=keep_en >
+Z5      30      128     0.2     2*64      -         64    3     61.96         53.55         60.48         50.02
+-------------------------------------------------------------------------------------------------------------------------------------------
+e) < supervised, merger=keep_en >
 Z5      30      128     0.2     2*64      -         64    2     62.08         55.11         60.83         51.11
-
 -------------------------------------------------------------------------------------------------------------------------------------------
-< Z5 supervised >
-** cmd: python3 supervised.py --src_lang de --tgt_lang en --src_emb crosslingual_EN-DE_german_twitter_100d_weighted.txt.w2v --tgt_emb trained_en_embs.txt --n_refinement 5 --dico_train default
+** observation: averaged merging decreased performance of De
+** observation: decrease in performance of En could be attributed to the averaged merging (a & b and c & d)
+** observation: Z5 shows improvement upon ZM (w/o De embeddings), but underperforms other settings (Z2-4) except in the supervised setting
+** observation: it can be thus inferred that Z5 shows no significant purpose, but lowers En performance by averaging embs
 -------------------------------------------------------------------------------------------------------------------------------------------
-< Z5 with GloVe Twitter embeddings: unsupervised >
-** very bad evaluation scores with tasks provided in MUSE
+< Z5 with GloVe Twitter: unsupervised >
+** bad evaluation scores with MUSE evaluation tasks
 setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
 Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
 Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
 
-Z5      30      128     0.2     2*64      -         64    3     63.32         56.80         62.01         32.86
+GloVe Z5  30    128     0.2     2*64      -         64    3     63.32         56.80         62.01         32.86
 GloVe ZM  30    128     0.2     2*64      -         64    5     62.66         58.43         61.53         38.50
 ** comment: De neu-skewed
+-------------------------------------------------------------------------------------------------------------------------------------------
+< Z5 with GloVe Twitter: supervised >
+GloVe Z5  30    128     0.2     2*64      -         64    2     63.10         57.21         61.63         37.98
+GloVe ZM  30    128     0.2     2*64      -         64    5     62.66         58.43         61.53         38.50
+** comment: De neu-skewed
+** observation: GloVe Z5 shows no significant improvement
+** observation: GloVe Z5 does not outperform GloVe ZM (w/o De embeddings)
 
-< Z5 with GloVe Twitter embeddings: supervised >
-setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-Z5      30      128     0.2     2*64      -         64    2     63.10         57.21         61.63         37.98
-GloVe ZM  30    128     0.2     2*64      -         64    5     62.66         58.43         61.53         38.50
-** comment: De neu-skewed
-** observation: mapped GloVe offers no significant improvement
-** observation: mapped GloVe does not improve De compared to GloVe ZM (w/o De embeddings)
+-------------------------------------------------------------------------------------------------------------------------------------------
+INTRINSIC EVALUATION SCORES FROM MUSE
+-------------------------------------------------------------------------------------------------------------------------------------------
+                          De->En Conneau et al. |  De->En TwitterCLSA ----> epoch_size 100000->500000
+-----------------------------------------------------------------------------------------------------
+NN                        59.6                  |  35.74                |   29.87
+CSLS                      66.4                  |  35.23                |   30.70
+Refined NN                69.6                  |  34.40                |   34.56
+Refined CSLS              72.2                  |  35.23                |   35.74
+CLWordsim ADV             0.7                   |  0.63                 |   0.52
+CLWordsim ADV Refined     0.71                  |  0.61                 |   0.62
+-----------------------------------------------------------------------------------------------------
+                          De->En Conneau et al. |  De->En Tw.CLSA superv.
+-----------------------------------------------------------------------------------------------------
+NN                        59.6                  |  -                    |
+CSLS                      66.4                  |  -                    |
+Refined NN                69.6                  |  35.07                |
+Refined CSLS              72.2                  |  35.07                |
+CLWordsim ADV             0.7                   |  -                    |
+CLWordsim ADV Refined     0.71                  |  0.64                 |
+-----------------------------------------------------------------------------------------------------
+                          De->En Conneau et al. |  GloVe unsupervised   |   GloVe supervised
+-----------------------------------------------------------------------------------------------------
+NN                        59.6                  |  0                    |   -
+CSLS                      66.4                  |  0                    |   -
+Refined NN                69.6                  |  0                    |   13.93
+Refined CSLS              72.2                  |  0                    |   12.08
+CLWordsim ADV             0.7                   |  0.15                 |   -
+CLWordsim ADV Refined     0.71                  |  -0.06                |   0.54
