@@ -2,9 +2,11 @@
 EXPERIMENT SETTINGS IN THIS LOG
 -------------------------------------------------------------------------------------------------------------------------------------------
 ** results recorded in this log:
+  * investigate performance of GloVe Twitter embeddings
+  * investigate effectiveness of pickle-loaded Tokenizer (outdated - loading Tokenizer no longer needed)
   * compare performance of fine-tuning against zero-shot and monolingual training
-  * compare effects of fine-tuning data size and LR
-  * investigate possibility of combining fixed + trainable BWE
+  * compare different fine-tuning data sizes and LR
+  * investigate performance of combining fixed + trainable BWE
   * propose possibility of training both BWE and rest of the model
 
 (M-monolingual, C-classical transfer, Z-zero-shot transfer)
@@ -12,7 +14,7 @@ M1: EmbLayer
 M2: [EnDe BWE] fixed
 M3: [EnDe BWE] trainable
 Z1: En train/dev/test, EmbLayer; De test (zero-shot) -> De vocab should have random embeddings
-ZM: En train/dev/test, [En BWE]; De test (zero-shot) -> De vocab should have all 0 embeddings
+ZM: En train/dev/test, [En BWE]; De test (zero-shot) -> De vocab should embeddings of 0's
 Z2: En train/dev/test, [EnDe BWE] fixed; De test (zero-shot)
 Z3: En train/dev/test, [EnDe BWE] trainable; De test (zero-shot)
 Z4: En train/dev/test, [EnDe BWE fixed][EnDe BWE trainable]; De test (zero-shot)
@@ -84,31 +86,36 @@ C3      train 30      128     0.2     2*64      -         64    1         -     
         tune  30      128     0.2     2*64      -         64    -         1         59.98         57.87         59.29         53.05
 ** observation1: De performance comparable to those in De-monolingual settings after fine-tuning
 ** observation2: small decrease in En performance after fine-tuning
+** comment on C3: BWE in C2 increases performance for En and De, updating BWE in C3 negative for both
 -------------------------------------------------------------------------------------------------------------------------------------------
 < as comparison: scores when train/dev/test with full De >
 <DE> CLARIN.si full (train 9697/29522/13643; dev 2078/6326/2923; test 2078/6326/2923)
-setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-M1      30      128     0.2     2*64      -         64    1     -             57.89         -             49.35
-M2      30      128     0.2     2*64      -         64    6     -             59.49         -             54.13
-M3      30      128     0.2     2*64      -         64    1     -             58.76         -             52.50
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+M1            30      128     0.2     2*64      -         64              1         -             57.89         -             49.35
+M2            30      128     0.2     2*64      -         64              6         -             59.49         -             54.13
+M3            30      128     0.2     2*64      -         64              1         -             58.76         -             52.50
 -------------------------------------------------------------------------------------------------------------------------------------------
 < as comparison: scores when train/dev/test with 20% De >
 <DE> CLARIN.si 20% (CLARIN_small20) (train 1939/5904/2729; dev 2078/6326/2923; test 2078/6326/2923)
-setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-M1      30      128     0.2     2*64      -         64    1     -             55.26         -             41.55
-M2      30      128     0.2     2*64      -         64    5     -             58.60         -             50.59
-M3      30      128     0.2     2*64      -         64    1     -             57.23         -             48.82
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+M1            30      128     0.2     2*64      -         64              1         -             55.26         -             41.55
+M2            30      128     0.2     2*64      -         64              5         -             58.60         -             50.59
+M3            30      128     0.2     2*64      -         64              1         -             57.23         -             48.82
 ** observation: still better scores than zero-shot
 -------------------------------------------------------------------------------------------------------------------------------------------
 < as comparison: scores when train/dev/test with 10% De >
 <DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
-setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-M1      30      128     0.2     2*64      -         64    1     -             54.25         -             28.21         De neu-skewed
-M2      30      128     0.2     2*64      -         64    6     -             56.94         -             50.70
-M3      30      128     0.2     2*64      -         64    1     -             54.24         -             38.22
-** observation1: lower scores as dataset size decreases
-** observation2: possible overfitting & underrepresentation of minority classes in low-resource setting (ref. neu-skewness)
-** observation3: comparable scores with zero-shot
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+M1            30      128     0.2     2*64      -         64              1         -             54.25         -             28.21
+M2            30      128     0.2     2*64      -         64              6         -             56.94         -             50.70
+M3            30      128     0.2     2*64      -         64              1         -             54.24         -             38.22
+** observation: lower scores as dataset size decreases, also overfitting to predicting majority class
+** observation: possible overfitting & underrepresentation of minority classes in low-resource setting (ref. neu-skewness)
+** observation: slightly better scores with zero-shot:
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch epoch               F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z1            30      128     0.2     2*64      -         64    1                   60.99         54.78         59.21         32.43
+Z2            30      128     0.2     2*64      -         64    8                   63.13         56.71         61.31         50.85
+Z3            30      128     0.2     2*64      -         64    1                   62.03         55.38         60.71         49.62
 -------------------------------------------------------------------------------------------------------------------------------------------
 < classical settings, with 10% De data >
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
@@ -201,7 +208,12 @@ setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1
 Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
 Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
 Z4      30      128     0.2     2*64      -         64    1     62.45         55.86         60.54         50.56
-** observation: sentiment-tuning (train-vocab) BWE does not provide better performance
+** observation: sentiment-tuning train-vocab BWE does not result in better performance
+-------------------------------------------------------------------------------------------------------------------------------------------
+< Z4 comparison to Z2 & Z3 >
+see above section SIZE OF FINE-TUNING DATASET VS PERFORMANCE
+** observation: like in Z settings sentiment-tuned BWE does not show clear improvements
+-------------------------------------------------------------------------------------------------------------------------------------------
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -215,7 +227,7 @@ setting LR      MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro
 Z3      default 30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
 Z3      0.0001  30      128     0.2     2*64      -         64    2     62.40         53.14         61.15         50.40
 Z3      0.00001 30      128     0.2     2*64      -         64    12    60.74         52.44         59.30         49.31
-** observation: setting LR to 0.0001 and tune BWE before freezing the layer for architecture training
+** comment: setting LR to 0.0001 and tune BWE before freezing the layer for architecture training
 -------------------------------------------------------------------------------------------------------------------------------------------
 < experiments with EmbEnhancer: notes >
 ** when embs are updated, their weights are optimized after only 1 epoch, this can cause the rest of the model to be undertrained
@@ -268,9 +280,9 @@ Z2      e-3       -       30      128     0.2     2*64      -         64    8   
 Enh.Z4  e-3       e-4     30      128     0.2     2*64      -         64    8         3         64.05     57.41     62.72     51.02
 
 ** observation: contrary to what EmbEnhancer seems to prove, tuned embs in this setting improves performance (comp. Z2 with Enh.Z3/Z4)
-** observation: if tuned beforehand, sentiment-embs limit the capacity of arch. training and thus worsen the performance
 ** observation: ArchEnhancer > fixed BWE > trainable BWE > EmbEnhacer
-** hypothesis: problems tuning embs with architecture fixed?
+** hypothesis: if tuned beforehand, sentiment-embs limit the capacity of arch. training and thus worsen the performance
+** hypothesis: problems with tuning embs with fixed architecture?
 
 setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epo-en(arch,emb)  epo-de(arch,emb)  En-micro  De-micro  En-macro  De-macro
 C3      train 30      128     0.2     2*64      -         64    1,-               -,-               62.96     57.08     61.29     49.56

@@ -62,6 +62,10 @@ COMPLETE EXPERIMENT DESCRIPTION
 -------------------------------------------------------------------------------------------------------------------------------------------
 EXPERIMENT SETTINGS IN THIS LOG
 -------------------------------------------------------------------------------------------------------------------------------------------
+** results recorded in this log:
+  * compare basic scores on different datasets
+  * compare basic scores on different model architectures
+
 (C-classical transfer, Z-zero-shot transfer)
 Z1: En train/dev/test, EmbLayer; De test (zero-shot) -> De vocab should have random embeddings
 ZM: En train/dev/test, [En BWE]; De test (zero-shot) -> De vocab should have all 0 embeddings
@@ -215,7 +219,6 @@ Z2      10      256     0.5     4*64      -         32      6     56.75         
 >Issues/experiments to address
 Tokenizer does not recognize De vocabs
   - fit_on_texts on both train(En) and test(De)
-low validation score
 En: only vocab seen in training updated (generalization problem)
 De embs not updated in zero-shot
 1 reason for bad performance with updated embs: unable to generalize when only training embs updated
@@ -229,7 +232,6 @@ generally involving trainable embeddings: architecture stops being trained after
 >>Older results
 >Experiments using CLARIN En full (12422 neg/23700 neu/13453 pos)
 * best epoch num reported by Callback
-* - means did not implement
 setting MAXLEN  bilstm  lstm  dropout   dense   dropouts  batch   epoch F1-micro(En)  F1-micro(De)
 M1      30      -       -     -         2*128   -         32      1     60.23         -
 M1      30      256     -     0.9       2*128   -         32      1     60.62         -
