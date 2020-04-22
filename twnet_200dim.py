@@ -12,12 +12,11 @@ from sklearn.metrics import f1_score
 import pickle, json
 import utils
 
-FINETUNE = False
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
-de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small10/train'
-de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_small10/dev'
+de_train_dir = './TWEETS/CLEAN/DE_CLARIN_full/train'
+de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
 de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
 train_texts, train_labels = utils.load_data(train_dir)
 dev_texts, dev_labels = utils.load_data(dev_dir)
@@ -31,9 +30,9 @@ MAXLEN = 30    # max tweet word count
 
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(train_texts + dev_texts + test_texts + de_train_texts + de_dev_texts + de_test_texts)
-with open('tokenizer.pickle', 'wb') as tokenizer_output:
-    pickle.dump(tokenizer, tokenizer_output, protocol=pickle.HIGHEST_PROTOCOL)
-print('Tokenizer object exported')
+# with open('tokenizer.pickle', 'wb') as tokenizer_output:
+    # pickle.dump(tokenizer, tokenizer_output, protocol=pickle.HIGHEST_PROTOCOL)
+# print('Tokenizer object exported')
 # tokenizer_json = tokenizer.to_json()
 # with open('tokenizer.json', 'w') as dumpfile:
 #     json.dump(tokenizer_json, dumpfile)
@@ -118,11 +117,13 @@ dense1 = layers.Dense(64, activation='relu')(dropout)
 dense2 = layers.Dense(64, activation='relu')(dense1)
 output_layer = layers.Dense(3, activation='softmax')(dense2)
 model = models.Model(inputs=input_layer, outputs=output_layer)
+print(model.summary())
 
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
 es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True, save_weights_only=False)
-history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+# history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+history = model.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
 # print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
 # utils.list_layers(model)
 # print(model.layers[3].output_shape)
@@ -143,6 +144,7 @@ print('micro de:', f1_score(gold_de, predicted_de, average='micro'))
 print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
 
 # de fine-tuning
+FINETUNE = False
 if FINETUNE:
     print('performing classical fine-tuning...')
     print('train:', de_train_dir)

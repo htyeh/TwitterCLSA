@@ -14,7 +14,6 @@ import utils
 from keras import optimizers
 import keras.backend as K
 
-FINETUNE = False
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
@@ -27,9 +26,9 @@ MAXLEN = 30    # max tweet word count
 
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(train_texts + dev_texts + test_texts)
-with open('tokenizer.pickle', 'wb') as tokenizer_output:
-    pickle.dump(tokenizer, tokenizer_output, protocol=pickle.HIGHEST_PROTOCOL)
-print('Tokenizer object exported')
+# with open('tokenizer.pickle', 'wb') as tokenizer_output:
+    # pickle.dump(tokenizer, tokenizer_output, protocol=pickle.HIGHEST_PROTOCOL)
+# print('Tokenizer object exported')
 # with open('tokenizer.pickle', 'rb') as tokenizer_input:
     # tokenizer = pickle.load(tokenizer_input)
 
@@ -69,9 +68,9 @@ y_test = test_labels
 EMBEDDING_DIM = 100
 
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE_Z5.txt')
+embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE_Z5.txt')
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/crosslingual_EN-DE_english_twitter_100d_weighted.txt.w2v')
-embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.100d.txt', dim=EMBEDDING_DIM)
+# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.100d.txt', dim=EMBEDDING_DIM)
 
 embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
 
@@ -106,7 +105,6 @@ print('macro en:', f1_score(gold_en, predicted_en, average='macro'))
 
 # utils.test_evaluation(gold, predicted)
 # utils.test_evaluation(gold2, predicted2)
-
 
 # toy tests
 # toy_sents = tokenizer.texts_to_sequences(['the cat sat on the mat', 'what a great movie', 'better not again', 'terrible, worst ever', 'best film ever', 'today is Tuesday'])

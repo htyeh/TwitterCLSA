@@ -14,12 +14,11 @@ import utils
 from keras import optimizers
 import keras.backend as K
 
-FINETUNE = True
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
 de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small10/train'
-de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_small10/dev'
+de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
 de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
 train_texts, train_labels = utils.load_data(train_dir)
 dev_texts, dev_labels = utils.load_data(dev_dir)
@@ -33,9 +32,9 @@ MAXLEN = 30    # max tweet word count
 
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(train_texts + dev_texts + test_texts + de_train_texts + de_dev_texts + de_test_texts)
-with open('tokenizer.pickle', 'wb') as tokenizer_output:
-    pickle.dump(tokenizer, tokenizer_output, protocol=pickle.HIGHEST_PROTOCOL)
-print('Tokenizer object exported')
+# with open('tokenizer.pickle', 'wb') as tokenizer_output:
+    # pickle.dump(tokenizer, tokenizer_output, protocol=pickle.HIGHEST_PROTOCOL)
+# print('Tokenizer object exported')
 # with open('tokenizer.pickle', 'rb') as tokenizer_input:
     # tokenizer = pickle.load(tokenizer_input)
 # tokenizer_json = tokenizer.to_json()
@@ -121,6 +120,7 @@ dense1 = layers.Dense(64, activation='relu')(dropout)
 dense2 = layers.Dense(64, activation='relu')(dense1)
 output_layer = layers.Dense(3, activation='softmax')(dense2)
 model = models.Model(inputs=input_layer, outputs=output_layer)
+Adam = optimizers.Adam(learning_rate=0.0001)
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
 print(model.summary())
 print('LR:', K.eval(model.optimizer.lr))
@@ -139,7 +139,7 @@ Adam = optimizers.Adam(learning_rate=0.0001)
 model2.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
 print(model2.summary())
 print('LR:', K.eval(model2.optimizer.lr))
-es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=0, restore_best_weights=True, verbose=1)
+es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=3, restore_best_weights=True, verbose=1)
 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
 model2.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
 # print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
@@ -163,6 +163,7 @@ print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
 # utils.test_evaluation(gold2, predicted2)
 
 # de fine-tuning
+FINETUNE = True
 if FINETUNE:
     print('performing classical fine-tuning...')
     print('train:', de_train_dir)
@@ -172,9 +173,10 @@ if FINETUNE:
     model3.layers[2].trainable = False  # freeze one EmbLayer
     for layer in model3.layers[4:]:
         layer.trainable = True  # unfreeze rest layers
-    model3.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
-    print(K.eval(model3.optimizer.lr))
+    Adam = optimizers.Adam(learning_rate=0.0001)
+    model3.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
     print(model3.summary())
+    print(K.eval(model3.optimizer.lr))
     es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
     mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True, save_weights_only=False)
     model3.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
@@ -184,10 +186,11 @@ if FINETUNE:
     model4.layers[2].trainable = True
     for layer in model4.layers[4:]:
         layer.trainable = False
+    Adam = optimizers.Adam(learning_rate=0.0001)
     model4.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
     print(model4.summary())
     print('LR:', K.eval(model4.optimizer.lr))
-    es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=0, restore_best_weights=True, verbose=1)
+    es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=3, restore_best_weights=True, verbose=1)
     mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
     model4.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
 

@@ -14,12 +14,11 @@ import utils
 from keras import optimizers
 import keras.backend as K
 
-FINETUNE = False
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
 de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small10/train'
-de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_small10/dev'
+de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
 de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
 train_texts, train_labels = utils.load_data(train_dir)
 dev_texts, dev_labels = utils.load_data(dev_dir)
@@ -33,9 +32,9 @@ MAXLEN = 30    # max tweet word count
 
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(train_texts + dev_texts + test_texts + de_train_texts + de_dev_texts + de_test_texts)
-with open('tokenizer.pickle', 'wb') as tokenizer_output:
-    pickle.dump(tokenizer, tokenizer_output, protocol=pickle.HIGHEST_PROTOCOL)
-print('Tokenizer object exported')
+# with open('tokenizer.pickle', 'wb') as tokenizer_output:
+    # pickle.dump(tokenizer, tokenizer_output, protocol=pickle.HIGHEST_PROTOCOL)
+# print('Tokenizer object exported')
 # with open('tokenizer.pickle', 'rb') as tokenizer_input:
     # tokenizer = pickle.load(tokenizer_input)
 # tokenizer_json = tokenizer.to_json()
@@ -126,16 +125,16 @@ Adam = optimizers.Adam(learning_rate=0.0001)
 model.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
 print(model.summary())
 print('LR:', K.eval(model.optimizer.lr))
-es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=0, restore_best_weights=True, verbose=1)
+es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=3, restore_best_weights=True, verbose=1)
 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
 model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
 # print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
 
 # freeze BWE
-print('continuing training with frozen EmbLayer...')
+print('training architecture with frozen EmbLayer...')
 model2 = models.load_model('best_model.h5', compile=False)
 model2.layers[2].trainable = False
-model2.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
+model2.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
 print(model2.summary())
 print('LR:', K.eval(model2.optimizer.lr))
 es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
@@ -162,21 +161,37 @@ print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
 # utils.test_evaluation(gold2, predicted2)
 
 # de fine-tuning
+FINETUNE = True
 if FINETUNE:
     print('performing classical fine-tuning...')
     print('train:', de_train_dir)
     print('dev:', de_dev_dir)
-    model2 = models.load_model('best_model.h5', compile=True)
-    # Adam = Adam(learning_rate=0.01)
-    # print(K.eval(model.optimizer.lr))
-    es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
+    print('fine-tuning embs...')
+    model3 = models.load_model('best_model.h5', compile=False)
+    model3.layers[2].trainable = True
+    Adam = optimizers.Adam(learning_rate=0.0001)
+    model3.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
+    print(model3.summary())
+    print(K.eval(model3.optimizer.lr))
+    es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=3, restore_best_weights=True, verbose=1)
     mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True, save_weights_only=False)
-    history = model2.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+    model3.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+
+    print('fine-tuning architecture...')
+    model4 = models.load_model('best_model.h5', compile=False)
+    model4.layers[2].trainable = False
+    Adam = optimizers.Adam(learning_rate=0.0001)
+    model4.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
+    print(model4.summary())
+    print('LR:', K.eval(model4.optimizer.lr))
+    es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
+    mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
+    model4.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
 
     gold_en = y_test
-    predicted_en = model2.predict(x_test).argmax(axis=1)
+    predicted_en = model4.predict(x_test).argmax(axis=1)
     gold_de = y_test_de
-    predicted_de = model2.predict(x_test_de).argmax(axis=1)
+    predicted_de = model4.predict(x_test_de).argmax(axis=1)
 
     print('sample en gold:', gold_en[:30])
     print('sample en pred:', predicted_en[:30])

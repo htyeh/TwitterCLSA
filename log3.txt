@@ -4,6 +4,21 @@ EXPERIMENT SETTINGS IN THIS LOG
 (M-monolingual, C-classical transfer, Z-zero-shot transfer)
 Z5: En train/dev/test, [En BWE]; map [De BWE] to [En BWE]; De test (zero-shot)
 
+-----------------------------------------------------------------------------------------------------
+INVESTIGATION OF TUNED-BWE -- AVG COSSIM
+-----------------------------------------------------------------------------------------------------
+** setting = Z3 (to investigate En embeddings)
+** trained BWE is extracted
+** original BWE is filtered for the same vocabs
+** calculate avg. cos. similarity
+** add instructions for cossim.py
+** where this is useful: to maximize the effect of 'updated embs', we need to find a LR where orig. En BWE is maximally trained
+Emb               LR        avg.cossim
+Collados et al.   0.01      0.48
+                  e-3       0.63
+                  e-4       0.64
+                  e-5       0.64
+                  e-6       0.64
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 < Z5 setting: notes >
@@ -16,6 +31,7 @@ Z5: En train/dev/test, [En BWE]; map [De BWE] to [En BWE]; De test (zero-shot)
 ** adjuestments to MUSE parameters unsupervised: epoch_size 100000/500000, default emb_dim=100
 ** python3 unsupervised.py --src_lang de --tgt_lang en --src_emb crosslingual_EN-DE_german_twitter_100d_weighted.txt.w2v --tgt_emb trained_en_embs.txt --n_refinement 5
 ** python3 supervised.py --src_lang de --tgt_lang en --src_emb crosslingual_EN-DE_german_twitter_100d_weighted.txt.w2v --tgt_emb trained_en_embs.txt --n_refinement 5 --dico_train default
+** resulting En space much smaller than De, but presumably irrelevant because all vocabs found in train/dev/test sets are included
 -------------------------------------------------------------------------------------------------------------------------------------------
 < Z5: steps >
 e-4 LR
@@ -29,7 +45,7 @@ joint BWE fed into twnet
 
 setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
-Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
+Z2      30      128     0.2     2*64      -         64    10    63.44         56.97         61.50         50.85
 Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
 Z4      30      128     0.2     2*64      -         64    1     62.45         55.86         60.54         50.56
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -57,7 +73,7 @@ Z5      30      128     0.2     2*64      -         64    2     62.08         55
 ** bad evaluation scores with MUSE evaluation tasks
 setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
-Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
+Z2      30      128     0.2     2*64      -         64    10    63.44         56.97         61.50         50.85
 Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
 
 GloVe Z5  30    128     0.2     2*64      -         64    3     63.32         56.80         62.01         32.86
@@ -83,48 +99,106 @@ Refined CSLS              72.2                  |  35.23                |   35.7
 CLWordsim ADV             0.7                   |  0.63                 |   0.52
 CLWordsim ADV Refined     0.71                  |  0.61                 |   0.62
 -----------------------------------------------------------------------------------------------------
-                          De->En Conneau et al. |  De->En Tw.CLSA superv.
+                          De->En Conneau et al. |  De->En Tw.CLSA superv.|  GloVe supervised
 -----------------------------------------------------------------------------------------------------
-NN                        59.6                  |  -                    |
-CSLS                      66.4                  |  -                    |
-Refined NN                69.6                  |  35.07                |
-Refined CSLS              72.2                  |  35.07                |
-CLWordsim ADV             0.7                   |  -                    |
-CLWordsim ADV Refined     0.71                  |  0.64                 |
+Procrustes NN             67.7                  |  35.07                |   13.93
+Procrustes CSLS           72.4                  |  35.07                |   12.08
+CLWordsim                 0.72                  |  0.64                 |   0.54
 -----------------------------------------------------------------------------------------------------
-                          De->En Conneau et al. |  GloVe unsupervised   |   GloVe supervised
+                          De->En Conneau et al. |  GloVe unsupervised   |
 -----------------------------------------------------------------------------------------------------
-NN                        59.6                  |  0                    |   -
-CSLS                      66.4                  |  0                    |   -
-Refined NN                69.6                  |  0                    |   13.93
-Refined CSLS              72.2                  |  0                    |   12.08
-CLWordsim ADV             0.7                   |  0.15                 |   -
-CLWordsim ADV Refined     0.71                  |  -0.06                |   0.54
+NN                        59.6                  |  0                    |
+CSLS                      66.4                  |  0                    |
+Refined NN                69.6                  |  0                    |
+Refined CSLS              72.2                  |  0                    |
+CLWordsim ADV             0.7                   |  0.15                 |
+CLWordsim ADV Refined     0.71                  |  -0.06                |
 
 ** comment: suggested by https://www.aclweb.org/anthology/P18-1073.pdf MUSE is unable to handle radically different spaces w/ unsupervised method
+-------------------------------------------------------------------------------------------------------------------------------------------
+SIDE EXPERIMENT: MAP DE -> UNTRAINED GLOVE TWITTER
+-------------------------------------------------------------------------------------------------------------------------------------------
+                          De->En Conneau et al.    |  De->GloVe side test (supervised)
+Procrustes NN                67.7                  |  35.07
+Procrustes CSLS              72.4                  |  34.73
+CLWordsim                    0.72                  |  0.64
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+VECMAP - INTRODUCTION
+-------------------------------------------------------------------------------------------------------------------------------------------
+* unsupervised
+python3 map_embeddings.py --unsupervised crosslingual_EN-DE_german_twitter_100d_weighted.txt.w2v vectors-en.txt de_unsupervised_mapped.txt en_unsupervised_mapped.txt
+
+* identical (no seed-dict, use identical words)
+* semi-supervised (small seed-dict)
+* supervised (seed-dict)
+python3 map_embeddings.py --supervised data/dictionaries/en-de.train.txt crosslingual_EN-DE_german_twitter_100d_weighted.txt.w2v vectors-en.txt de_supervised_mapped.txt en_supervised_mapped.txt   or
+python3 map_embeddings.py --supervised data/dictionaries/en-de.train.txt vectors-en.txt crosslingual_EN-DE_german_twitter_100d_weighted.txt.w2v en_supervised_mapped.txt de_supervised_mapped.txt   --fewer OOV dict-entry error
+
+* intrinsic evaluation methods:
+  CSLS
+  CLWordsim
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+OWN EVALUATION: cossim_crosslingual
+-------------------------------------------------------------------------------------------------------------------------------------------
+* en-de & de-en dict available from MUSE (101931 en-de pairs & 101997 de-en pairs) used for evaluation
+* approach see cossim_crosslingual.py
+* avg cossim once en-de + once de-en & take average of two
+* python3 cossim_crosslingual.py en_embs.txt de_embs.txt -d MUSE_dictionaries/en-de.txt
+
+mapping_method                              en-de_avg_cossim  de-en_avg_cossim  avg_cossim  merger  setting EnMicro DeMicro EnMacro DeMacro
+none (between trained En & untrained De)    0.6471            0.6397            0.6434      -       Z2      63.44   56.97   61.50   50.85
+                                                                                            -       C2      61.52   60.03   58.94   51.87
+vecmap supervised, dict=en-de.train.txt     0.6401            0.6425            0.6412      avg     Z2      60.58   54.04   59.28   48.72
+                                                                                            keep    Z2      61.40   56.11   60.09   45.39
+vecmap supervised, dict=MUSE en-de.txt      0.6603            0.6578            0.6591      avg     Z2      61.41   55.27   59.43   47.82
+                                                                                            keep    Z2      60.16   56.30   56.75   48.75
+vecmap unsupervised                         0.1158            0.1153            0.1156      avg     Z2      59.82   44.12   57.43   38.53
+                                                                                            keep    Z2      60.86   42.37   60.08   35.59
+MUSE supervised, dict=default               0.6144            0.6128            0.6136      avg     Z2      61.56   52.38   60.07   49.91
+                                                                                            keep    Z2      61.52   54.90   59.21   51.20
+MUSE unsupervised                           0.6179            0.6148            0.6164      avg     Z2      61.39   51.96   59.86   49.61
+                                                                                            keep    Z2      61.72   53.85   59.81   50.65
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+SUMMARY OF ALL
+-------------------------------------------------------------------------------------------------------------------------------------------
+LOWER & HIGHER BOUNDS
+-------------------------------------------------------------------------------------------------------------------------------------------
+setting         F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z1                            54.78                       32.43
+ZM                            54.08                       41.57
+M2-De-full                    59.49                       54.13
+C2-De-full                    60.04                       54.18
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 OVERVIEW OF ALL SCORES
 -------------------------------------------------------------------------------------------------------------------------------------------
-< BASIC SETTINGS >
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
 <DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
 setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+< BASIC SETTINGS >
 Z1      30      128     0.2     2*64      -         64    1     60.99         54.78         59.21         32.43
 ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
-Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
+Z2      30      128     0.2     2*64      -         64    10    63.44         56.97         61.50         50.85
 Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
 Z4      30      128     0.2     2*64      -         64    1     62.45         55.86         60.54         50.56
 Z5      30      128     0.2     2*64      -         64    2     62.08         55.11         60.83         51.11
 C1      30      128     0.2     2*64      -         64    -     60.97         55.79         58.01         45.13
 C2      30      128     0.2     2*64      -         64    -     61.52         60.03         58.94         51.87
-C3      30      128     0.2     2*64      -         64    -     60.25         56.69         57.63         46.63
+C3      30      128     0.2     2*64      -         64    -     59.88         57.71         58.30         48.23
 C4      30      128     0.2     2*64      -         64    -     61.82         57.45         60.88         50.11
 < EMB-ENHANCER SETTINGS >
 Z1      30      128     0.2     2*64      -         64    -     60.14         53.06         59.08         34.01
 Z3      30      128     0.2     2*64      -         64    -     62.12         48.01         61.04         46.13
 Z4      30      128     0.2     2*64      -         64    -     61.48         51.74         60.34         49.87
 < ARCH-ENHANCER SETTINGS >
+Z23     30      128     0.2     2*64      -         64    -     63.09         59.46         61.42         52.25
 Z3      30      128     0.2     2*64      -         64    -     64.48         56.10         63.11         50.42
 Z4      30      128     0.2     2*64      -         64    -     64.05         57.41         62.72         51.02

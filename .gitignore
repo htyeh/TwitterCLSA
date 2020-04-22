@@ -2,6 +2,7 @@ EMBEDDINGS/
 *.pickle
 *.h5
 test.py
+beta.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

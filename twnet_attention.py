@@ -11,8 +11,9 @@ import numpy as np
 from sklearn.metrics import f1_score
 import pickle, json
 import utils
-from keras import optimizers
+from keras import optimizers, regularizers
 import keras.backend as K
+from keras_self_attention import SeqSelfAttention
 
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
@@ -105,45 +106,44 @@ print(x_test[:3])
 EMBEDDING_DIM = 100
 
 embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
+# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE_Z5_avg_epo500000.txt')
+# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/crosslingual_EN-DE_english_twitter_100d_weighted.txt.w2v')
+# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.200d.txt', dim=EMBEDDING_DIM)
 
 embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
 
-# optimize BWE
-print('optimizing EmbLayer...')
+# build model
 model = models.Sequential()
 # model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
-model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=True, input_length=MAXLEN))
-model.add(layers.Bidirectional(layers.LSTM(128)))
+model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=False, input_length=MAXLEN))
+# model.add(layers.Conv1D(128, 2, padding='same', activation='relu'))
+# model.add(layers.MaxPooling1D(2))
+# model.add(layers.Flatten())
+model.add(layers.Bidirectional(layers.LSTM(128, return_sequences=True)))
 model.add(layers.Dropout(0.2))
+# model.add(SeqSelfAttention(attention_width=10, attention_activation='sigmoid'))
+model.add(SeqSelfAttention(attention_width=10, attention_type=SeqSelfAttention.ATTENTION_TYPE_MUL, attention_activation=None, kernel_regularizer=regularizers.l2(1e-6), use_attention_bias=False, name='Attention',))
+
+model.add(layers.Flatten())
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(3, activation='softmax'))
 Adam = optimizers.Adam(learning_rate=0.0001)
-model.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
 print(model.summary())
-print('LR:', K.eval(model.optimizer.lr))
-es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=3, restore_best_weights=True, verbose=1)
-mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
-print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
-
-# freeze BWE
-print('training architecture with frozen EmbLayer...')
-model2 = models.load_model('best_model.h5', compile=False)
-model2.layers[0].trainable = False
-Adam = optimizers.Adam(learning_rate=0.0001)
-model2.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
-print(model2.summary())
-print('LR:', K.eval(model2.optimizer.lr))
+print(K.eval(model.optimizer.lr))
 es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-model2.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=1000, shuffle=True, callbacks=[es, mc])
 print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
+# utils.save_embs_2_file(model, 0, tokenizer.word_index)
 
+# test_loss, test_acc = model.evaluate(x_test, y_test)
+# print('test loss:', test_loss, 'test acc:', test_acc)
 gold_en = y_test
-predicted_en = model2.predict(x_test).argmax(axis=1)
+predicted_en = model.predict(x_test).argmax(axis=1)
 gold_de = y_test_de
-predicted_de = model2.predict(x_test_de).argmax(axis=1)
+predicted_de = model.predict(x_test_de).argmax(axis=1)
 
 print('sample en gold:', gold_en[:30])
 print('sample en pred:', predicted_en[:30])
@@ -159,37 +159,25 @@ print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
 # utils.test_evaluation(gold2, predicted2)
 
 # de fine-tuning
-FINETUNE = True
+FINETUNE = False
 if FINETUNE:
     print('performing classical fine-tuning...')
     print('train:', de_train_dir)
     print('dev:', de_dev_dir)
-    print('fine-tuning embs...')
-    model3 = models.load_model('best_model.h5', compile=False)
-    model3.layers[0].trainable = True
-    Adam = optimizers.Adam(learning_rate=0.0001)
-    model3.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
-    print(model3.summary())
-    print(K.eval(model3.optimizer.lr))
-    es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=3, restore_best_weights=True, verbose=1)
-    mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True, save_weights_only=False)
-    model3.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
-
-    print('fine-tuning architecture...')
-    model4 = models.load_model('best_model.h5', compile=False)
-    model4.layers[0].trainable = False
-    Adam = optimizers.Adam(learning_rate=0.0001)
-    model4.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
-    print(model4.summary())
-    print('LR:', K.eval(model4.optimizer.lr))
+    model2 = models.load_model('best_model.h5', compile=False)
+    # model2.layers[0].trainable = True
+    Adam = optimizers.Adam(learning_rate=0.00001)
+    model2.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
+    print(model2.summary())
+    print(K.eval(model2.optimizer.lr))
     es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
-    mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-    model4.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+    mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True, save_weights_only=False)
+    history = model2.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
 
     gold_en = y_test
-    predicted_en = model4.predict(x_test).argmax(axis=1)
+    predicted_en = model2.predict(x_test).argmax(axis=1)
     gold_de = y_test_de
-    predicted_de = model4.predict(x_test_de).argmax(axis=1)
+    predicted_de = model2.predict(x_test_de).argmax(axis=1)
 
     print('sample en gold:', gold_en[:30])
     print('sample en pred:', predicted_en[:30])

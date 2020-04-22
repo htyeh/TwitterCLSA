@@ -20,7 +20,7 @@ SB-10K: link: https://www.spinningbytes.com/resources/germansentiment/
 
 >Tweet cleansing
 1) removed 'Not Available' ones
-2) contractions are kept (own embeddings)
+2) contractions/elongated words are kept (own embeddings)
 3) hashtags kept (might contain sentiment info)
 4) to lowercase
 5) removed @mentions/links
@@ -34,11 +34,13 @@ COMPLETE EXPERIMENT DESCRIPTION
 -------------------------------------------------------------------------------------------------------------------------------------------
 1) baseline: train/dev/test on De
   a) scale De data & test for overfitting
-2) lower bound settings (suggested in https://arxiv.org/pdf/1905.07358.pdf)
-  a) initialize EmbLayer, test on De directly
-  b) fixed [En BWE], test on De directly (sanity check for overlapping words)
-  c) always predict majority class
+2) lower & higher bound settings (suggested in https://arxiv.org/pdf/1905.07358.pdf)
+  a) lo: initialize EmbLayer, test on De directly
+  b) lo: fixed [En BWE], test on De directly (sanity check for overlapping words)
+  c) hi: training on full De
+  d) hi: fine-tuning on full De
 3) fixed [EnDe BWE] (classical fine-tuning)
+  a) fixed for training, unfreeze for De tuning
 4) trainable [EnDe BWE] (classical fine-tuning)
   a) full De fine-tuning
   b) downsized De fine-tuning
@@ -56,7 +58,7 @@ COMPLETE EXPERIMENT DESCRIPTION
 10) trainable [En BWE], map [De BWE] to [En BWE]
   a) MUSE/vecmap
   b) compare mapping evaluation
-11) (optional) train En EmbLayer, map De to En space
+11) train En EmbLayer, map De to En space
 
 * only En part of [EnDe BWE] get updates (no training on De vocab)
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,7 +82,7 @@ SemEval(full)     SemEval(full)   SemEval(full) CLARIN(full)  64.16         51.2
 SemEval(oversamp) SemEval(full)   SemEval(full) CLARIN(full)  62.76         29.67         57.18         29.01         De neg-skewed
 SemEval(oversamp) SemEval(full)   SemEval(full) SB-10k(full)  64.17         25.33         60.45         25.22         De neg-skewed
 SemEval(downsamp) SemEval(full)   SemEval(full) CLARIN(full)  58.36         46.43         57.21         46.77
-CLARIN(full)      CLARIN(full)    CLARIN(full)  CLARIN(full)  63.13         56.71         61.31         50.85
+CLARIN(full)      CLARIN(full)    CLARIN(full)  CLARIN(full)  63.44         56.97         61.50         50.85
 CLARIN(oversamp)  CLARIN(full)    CLARIN(full)  CLARIN(full)  60.74         51.38         60.62         49.87
 CLARIN(downsamp)  CLARIN(full)    CLARIN(full)  CLARIN(full)  59.83         51.38         59.39         50.20
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -155,7 +157,7 @@ Z2      30      128     0.2     2*64      -         64    4     59.83         51
 setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 Z1      30      128     0.2     2*64      -         64    1     60.99         54.78         59.21         32.43
 ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
-Z2      30      128     0.2     2*64      -         64    8     63.13         56.71         61.31         50.85
+Z2      30      128     0.2     2*64      -         64    10    63.44         56.97         61.50         50.85
 Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
 -------------------------------------------------------------------------------------------------------------------------------------------
 <EN> CLARIN full train (8696 neg/16590 neu/9415 pos)
