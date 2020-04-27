@@ -22,24 +22,9 @@ Z4: En train/dev/test, [EnDe BWE fixed][EnDe BWE trainable]; De test (zero-shot)
 C1: En train/dev/test, EmbLayer; De train/dev/test (fine-tuning)
 C2: En train/dev/test, [EnDe BWE] fixed; De train/dev/test (fine-tuning)
 C3: En train/dev/test, [EnDe BWE] trainable; De train/dev/test (fine-tuning)
-C23: En train/dev/test, [EnDe BWE] fixed; De train/dev/test, [EnDe BWE] trainable (fine-tuning)
+CX: En train/dev/test, [EnDe BWE] fixed; De train/dev/test, [EnDe BWE] trainable (fine-tuning)
 C4: En train/dev/test, [EnDe BWE fixed][EnDe BWE trainable]; De train/dev/test (fine-tuning)
 
-
--------------------------------------------------------------------------------------------------------------------------------------------
-TESTING EMBEDDINGS
--------------------------------------------------------------------------------------------------------------------------------------------
-< tests to compare performance of embeddings: Collados et al. vs GloVe Twitter >
-<EN> CLARIN full train (8696 neg/16590 neu/9415 pos)
-<EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
-<EN> CLARIN full test (1863 neg/3555 neu/2019 pos)
-<DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
-<model architecture: bilstm(128) + dropout(0.2) + dense(64) + dense(64)> <batch=64> <setting=ZM>
-embeddings        dim   epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  pred. comment
-EmbLayer(Z1)      100   1     60.65         65.44         59.39         44.94         De neu-skewed
-Collados et al.   100   10    63.19         54.08         61.53         41.57
-GloVe Twitter     100   5     62.66         58.43         61.53         38.50         De neu-skewed
-GloVe Twitter     200   3     63.09         58.57         61.10         37.94         De neu-skewed
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -74,45 +59,39 @@ PREPARATION FOR CLASSICAL TRANSFER SETTINGS
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-EVALUATING THE EFFECTS OF DE DATASET SIZE
--------------------------------------------------------------------------------------------------------------------------------------------
-LaTex: No
-< classical settings, with full De data >
-<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
-<DE> CLARIN.si full (train 9697/29522/13643; dev 2078/6326/2923; test 2078/6326/2923)
-setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-C1      train 30      128     0.2     2*64      -         64    1         -         60.93         53.98         59.32         33.26
-        tune  30      128     0.2     2*64      -         64    -         1         60.56         57.43         57.34         51.52
-C2      train 30      128     0.2     2*64      -         64    11        -         63.15         55.64         61.64         50.26
-        tune  30      128     0.2     2*64      -         64    -         2         60.94         60.04         59.16         54.18
-C3      train 30      128     0.2     2*64      -         64    1         -         62.57         55.53         61.02         49.29
-        tune  30      128     0.2     2*64      -         64    -         1         59.98         57.87         59.29         53.05
-** observation1: De performance comparable to those in De-monolingual settings after fine-tuning
-** observation2: small decrease in En performance after fine-tuning
-** comment on C3: BWE in C2 increases performance for En and De, updating BWE in C3 negative for both
+DE MONOLINGUAL, FULL
 -------------------------------------------------------------------------------------------------------------------------------------------
 LaTex: Yes
 < monolingual train with full De >
 <DE> CLARIN.si full (train 9697/29522/13643; dev 2078/6326/2923; test 2078/6326/2923)
+
 setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M1            30      128     0.2     2*64      -         64              1         -             57.89         -             49.35
 M2            30      128     0.2     2*64      -         64              6         -             59.49         -             54.13
 M3            30      128     0.2     2*64      -         64              1         -             58.76         -             52.50
 M4            30      128     0.2     2*64      -         64              1         -             58.66         -             53.62
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+DE MONOLINGUAL, 20%
 -------------------------------------------------------------------------------------------------------------------------------------------
 LaTex: Yes
 < monolingual train with 20% De >
 <DE> CLARIN.si 20% (CLARIN_small20) (train 1939/5904/2729; dev 2078/6326/2923; test 2078/6326/2923)
+
 setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M1            30      128     0.2     2*64      -         64              1         -             55.26         -             41.55
 M2            30      128     0.2     2*64      -         64              5         -             58.60         -             50.59
 M3            30      128     0.2     2*64      -         64              1         -             57.23         -             48.82
 M4            30      128     0.2     2*64      -         64              1         -             56.83         -             48.58
 ** observation: still better scores than zero-shot
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+DE MONOLINGUAL, 10%
 -------------------------------------------------------------------------------------------------------------------------------------------
 LaTex: Yes
 < monolingual train with 10% De >
 <DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+
 setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M1            30      128     0.2     2*64      -         64              1         -             54.25         -             28.21
 M2            30      128     0.2     2*64      -         64              6         -             56.94         -             50.70
@@ -126,35 +105,32 @@ Z1            30      128     0.2     2*64      -         64    1               
 Z2            30      128     0.2     2*64      -         64    10                  63.44         56.97         61.50         50.85
 Z3            30      128     0.2     2*64      -         64    1                   62.03         55.38         60.71         49.62
 Z4            30      128     0.2     2*64      -         64    1                   62.45         55.86         60.54         50.56
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+FINE-TUNING, FULL DE
 -------------------------------------------------------------------------------------------------------------------------------------------
 LaTex: Yes
-< classical settings, with 10% De data >
+< classical settings, with full De data >
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
-<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+<DE> CLARIN.si full (train 9697/29522/13643; dev 2078/6326/2923; test 2078/6326/2923)
+
 setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-C1      train 30      128     0.2     2*64      -         64    1         -         61.29         54.28         59.09         32.60
-        tune  30      128     0.2     2*64      -         64    -         1         60.97         55.79         58.01         45.13
-C2      train 30      128     0.2     2*64      -         64    9         -         63.68         57.29         61.02         50.28
-        tune  30      128     0.2     2*64      -         64    -         2         61.52         60.03         58.94         51.87
-C3      train 30      128     0.2     2*64      -         64    1         -         62.66         55.60         61.26         49.68
-        tune  30      128     0.2     2*64      -         64    -         1         59.88         57.71         58.30         48.23
-C4      train 30      128     0.2     2*64      -         64    1         -         62.87         54.38         61.83         50.48
-        tune  30      128     0.2     2*64      -         64    -         1         61.82         57.45         60.88         50.11
-
-
--------------------------------------------------------------------------------------------------------------------------------------------
-SIZE OF FINE-TUNING DATASET VS PERFORMANCE
--------------------------------------------------------------------------------------------------------------------------------------------
-LaTex table: Yes
-< fine-tuning with full DE CLARIN >
-setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En) macro(De)
 C1      train 30      128     0.2     2*64      -         64    1         -         60.93         53.98         59.32         33.26
         tune  30      128     0.2     2*64      -         64    -         1         60.56         57.43         57.34         51.52
 C2      train 30      128     0.2     2*64      -         64    11        -         63.15         55.64         61.64         50.26
         tune  30      128     0.2     2*64      -         64    -         2         60.94         60.04         59.16         54.18
 C3      train 30      128     0.2     2*64      -         64    1         -         62.57         55.53         61.02         49.29
         tune  30      128     0.2     2*64      -         64    -         1         59.98         57.87         59.29         53.05
-< fine-tuning with 10% DE CLARIN >
+** De after fine-tuning comparable to performance in De-monolingual settings
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+FINE-TUNING, 10% DE
+-------------------------------------------------------------------------------------------------------------------------------------------
+LaTex: Yes
+< classical settings, with 10% De data >
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+
 setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 C1      train 30      128     0.2     2*64      -         64    1         -         61.29         54.28         59.09         32.60
         tune  30      128     0.2     2*64      -         64    -         1         60.97         55.79         58.01         45.13
@@ -164,6 +140,35 @@ C3      train 30      128     0.2     2*64      -         64    1         -     
         tune  30      128     0.2     2*64      -         64    -         1         59.88         57.71         58.30         48.23
 C4      train 30      128     0.2     2*64      -         64    1         -         62.87         54.38         61.83         50.48
         tune  30      128     0.2     2*64      -         64    -         1         61.82         57.45         60.88         50.11
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+FIXED + TRAINED EnDeBWE (Z4 & C4)
+-------------------------------------------------------------------------------------------------------------------------------------------
+< notes >
+** input Tweet is passed into 2 separate EmbLayers, one of them updated during training
+** BiLSTM input mismatch when using 200-dim merged BWE in Sequential is solved by applying sep. EmbLayers in the functional API
+** C4 would use the 10% De Tweets to fine-tune
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch epoch               F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z4            30      128     0.2     2*64      -         64    1                   62.45         55.86         60.54         50.56
+setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+C4      train 30      128     0.2     2*64      -         64    1         -         62.87         54.38         61.83         50.48
+        tune  30      128     0.2     2*64      -         64    -         1         61.82         57.45         60.88         50.11
+-------------------------------------------------------------------------------------------------------------------------------------------
+< Z4 comparison to Z2 & Z3 >
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      30      128     0.2     2*64      -         64    10    63.44         56.97         61.50         50.85
+Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
+Z4      30      128     0.2     2*64      -         64    1     62.45         55.86         60.54         50.56
+-------------------------------------------------------------------------------------------------------------------------------------------
+
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -179,55 +184,24 @@ C2      0.001   30      128     0.2     2*64      -         64    3     62.07   
 C2      0.0001  30      128     0.2     2*64      -         64    2     62.09         59.22         60.89         52.16
 C2      e-5     30      128     0.2     2*64      -         64    1     62.15         59.21         60.94         52.14
 C2      e-6     30      128     0.2     2*64      -         64    1     62.15         59.19         60.94         52.12
-** observation: LR lower than default causes slower forgetting/learning for EN/DE
+** if not otherwise specified, LR applies for both train & tune
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-FIXED + TRAINED EnDeBWE (Z4 & C4)
--------------------------------------------------------------------------------------------------------------------------------------------
-< notes >
-** input Tweet is passed into 2 separate EmbLayers, one of them updated during training
-** BiLSTM input mismatch when using 200-dim merged BWE in Sequential is solved by applying sep. EmbLayers in the functional API
-** C4 would use the 10% De Tweets to fine-tune
--------------------------------------------------------------------------------------------------------------------------------------------
-< without loading pre-trained model >
-<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
-<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
-setting       MAXLEN  bilstm  dropout dense     dropouts  batch epoch               F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-Z4            30      128     0.2     2*64      -         64    1                   62.45         55.86         60.54         50.56
-setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-C4      train 30      128     0.2     2*64      -         64    1         -         62.87         54.38         61.83         50.48
-        tune  30      128     0.2     2*64      -         64    -         1         61.82         57.45         60.88         50.11
--------------------------------------------------------------------------------------------------------------------------------------------
-< Z4 comparison to Z2 & Z3 >
-<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
-<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
-setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-Z2      30      128     0.2     2*64      -         64    10    63.44         56.97         61.50         50.85
-Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
-Z4      30      128     0.2     2*64      -         64    1     62.45         55.86         60.54         50.56
-** observation: sentiment-tuning train-vocab BWE does not result in better performance
--------------------------------------------------------------------------------------------------------------------------------------------
-< C4 comparison to C2 & C3 >
-see above section SIZE OF FINE-TUNING DATASET VS PERFORMANCE
-** observation: like in Z settings sentiment-tuned BWE does not show clear improvements
--------------------------------------------------------------------------------------------------------------------------------------------
-
-
--------------------------------------------------------------------------------------------------------------------------------------------
-EMB/ARCHITECTURE JOINT OPTIMIZATION
+EMB/ARCH JOINT OPTIMIZATION (ENHANCER SETTINGS)
 -------------------------------------------------------------------------------------------------------------------------------------------
 LaTex: Yes
 < effect of LR on optimizing embeddings >
-< adjusting Adam LR for optimizing BWE >
 < Adam default=0.001 >
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+
 setting LR      MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)  avg.cossim
 Z3      0.01    30      128     0.2     2*64      -         64    1     61.01         52.10         58.66         37.20         0.48
 Z3      default 30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62         0.63
 Z3      e-4     30      128     0.2     2*64      -         64    2     62.40         53.14         61.15         50.40         0.64
 Z3      e-5     30      128     0.2     2*64      -         64    12    60.74         52.44         59.30         49.31         0.64
 Z3      e-6     30      128     0.2     2*64      -         64    148   60.99         50.67         59.01         47.11         0.64
+
 ** comment: setting LR to 0.0001 and tune BWE before freezing the layer for architecture training
 ** cossim: between trained space and original BWE, see section in log3
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -236,16 +210,22 @@ LaTex: Yes
 < Adam default=0.001 >
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
 <DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+
 setting LR      MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 Z2      0.1     30      128     0.2     2*64      -         64    3     47.80         55.85         21.56         23.89
 Z2      0.01    30      128     0.2     2*64      -         64    3     63.41         58.90         61.35         52.51
+Z2      0.002   30      128     0.2     2*64      -         64    8     63.44         57.74         61.58         51.04
 Z2      default 30      128     0.2     2*64      -         64    10    63.44         56.97         61.50         50.85
+Z2      5e-4    30      128     0.2     2*64      -         64    13    62.97         55.95         61.03         49.85
 Z2      e-4     30      128     0.2     2*64      -         64    22    62.00         56.07         59.57         50.13
 Z2      e-5     30      128     0.2     2*64      -         64    67    61.11         55.33         58.65         51.14
+
 < keeping default LR in train-step >
 C2      0.1     30      128     0.2     2*64      -         64    5     47.80         55.85         21.56         23.89
 C2      0.01    30      128     0.2     2*64      -         64    2     59.44         59.74         57.60         52.46
+C2      0.002   30      128     0.2     2*64      -         64    1     61.15         58.87         59.48         51.44
 C2      default 30      128     0.2     2*64      -         64    2     61.52         60.03         58.94         51.87
+C2      5e-4    30      128     0.2     2*64      -         64    3     62.03         59.54         60.18         51.58
 C2      e-4     30      128     0.2     2*64      -         64    6     62.00         59.09         60.57         51.85
 C2      e-5     30      128     0.2     2*64      -         64    30    62.84         58.77         60.78         50.89
 
@@ -317,7 +297,7 @@ Enh.C4  e-4     e-3       train 2,2               -,-               60.63     48
 ** with the tuned embs, architectures in EmbEnhacer seem to train for few epochs
 ** architecture trained with default e-3 LR, embs tuned w/ LR lowered (e-4)
 ** in the emb-tuning step all other layers are frozen
-** in classical transfer settings: De data used to first tune architecture, then embs, same as in En part
+** in classical transfer settings: De data used to first tune architecture, then embs, same as for En
 -------------------------------------------------------------------------------------------------------------------------------------------
 LaTex: Yes
 < experiments with ArchEnhancer compared with same settings w/o Enhancer >
@@ -390,13 +370,57 @@ Enh.CX  e-3       -       train 9       0,0               63.41     56.36     61
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-SELF-ATTENTION
+ATTENTION
 -------------------------------------------------------------------------------------------------------------------------------------------
 LaTex: No
+
 setting   attention   LR(arch)  LR(emb) epo-en  epo-de    En-micro  De-micro  En-macro  De-macro
 Arch.C3   none        0.001     e-4     9,2     -,-       64.34     55.94     63.05     50.25
                                         -,-     2,1       62.29     60.07     61.09     52.83
 Arch.C3   additive    0.001     e-4     8,2     -,-       63.18     57.89     60.79     50.72
                                         -,-     1,1       62.52     59.00     61.26     51.56
-Arch.C3   mult        0.001     e-4     6,2     -         63.95     57.68     62.39     50.27
-                                        -,-     1,1       61.45     59.29     59.88     51.19
+Arch.C3   loc.add     0.001     e-4     8,8     -,-       63.69     56.88     62.15     50.65
+                                        -,-     1,1       61.77     59.65     60.03     51.75
+Arch.C3   mult        0.001     e-4     6,2     -,-       63.95     57.68     62.39     50.27
+          (none)                        -,-     1,1       61.45     59.29     59.88     51.19
+Arch.C3   loc.mult    0.001     e-4     7,2     -,-       63.67     57.11     62.13     50.72
+          (sigmoid)                     -,-     2,1       62.05     59.60     60.42     51.64
+Arch.C3   loc.mult    0.001     e-4     7,2     -,-       63.84     56.58     62.35     50.68
+          (tanh)                        -,-     2,1       62.36     59.62     60.46     51.39
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+BETA EXPERIMENTS
+-------------------------------------------------------------------------------------------------------------------------------------------
+LaTex: No
+
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+
+* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], dense(64), dense(64), C4 ArchEnhancer                             5953  5770  5814  4995
+* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], dense(128), dense(64), C4 ArchEnhancer                            6055  6016  5745  4867
+* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], dense(256), dense(128), C4 ArchEnhancer                           5906  5874  5720  4986
+* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], loc.attention(10), dense(128), dense(64), C4 ArchEnhancer         6150  5935  6027  5134
+* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], loc.attention(10), dense(128), dense(64), C3 ArchEnhancer         6087  5857  5969  5086
+* [ [cnn(128,3)+maxpool][bilstm(128)+dropout(0.2)] ], loc.attention(10), dense(128), dense(64), C3 ArchEnhancer       6097  5940  5896  5077
+* [ [cnn(256,3)+maxpool][bilstm(128)+no dropout] ], loc.attention(10), dense(128), dense(64), C4 ArchEnhancer         5934  5701  5751  5057
+* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], glob.attention, dense(128), dense(64), C4 ArchEnhancer            6058  5732  5960  5083
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+TRIALS WITH DIFFERENT EMBEDDINGS
+-------------------------------------------------------------------------------------------------------------------------------------------
+LaTex: No
+
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
+<model architecture: bilstm(128) + dropout(0.2) + dense(64) + dense(64)> <batch=64>
+
+                                        setting epoch En-micro  De-micro  En-macro  De-macro  comment
+none, 100-dim                           Z1      1     60.99     54.78     59.21     32.43
+(FastText) Collados(En), 100-dim        ZM      10    63.19     54.08     61.53     41.57
+GloVe Twitter27B, 100-dim               ZM      5     63.02     57.90     61.01     38.53     De neu-skewed
+GloVe Twitter27B, 200-dim               ZM      3     62.90     58.41     61.41     36.58     De neu-skewed
+GloVe CommonCrawl42B, 300-dim           ZM      3     62.78     49.80     61.43     40.59
+GloVe CommonCrawl840B, 300-dim          ZM      3     63.12     53.62     61.36     41.22

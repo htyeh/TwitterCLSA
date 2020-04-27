@@ -70,7 +70,7 @@ EXPERIMENT SETTINGS IN THIS LOG
 
 (C-classical transfer, Z-zero-shot transfer)
 Z1: En train/dev/test, EmbLayer; De test (zero-shot) -> De vocab should have random embeddings
-ZM: En train/dev/test, [En BWE]; De test (zero-shot) -> De vocab should have all 0 embeddings
+ZM: En train/dev/test, [En BWE] fixed; De test (zero-shot) -> De vocab should have all 0 embeddings
 Z2: En train/dev/test, [EnDe BWE] fixed; De test (zero-shot)
 Z3: En train/dev/test, [EnDe BWE] trainable; De test (zero-shot)
 
@@ -178,7 +178,23 @@ setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1
 Z1      30      128     0.2     2*64      -         64    1     58.85         51.98         58.54         35.11         De neu-skewed
 ZM      30      128     0.2     2*64      -         64    9     61.09         49.48         60.95         43.06
 Z2      30      128     0.2     2*64      -         64    6     60.74         51.38         60.62         49.87
+
 -------------------------------------------------------------------------------------------------------------------------------------------
+HYPERPARAMETER SEARCH
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z1      30      128     0.2     2*64      -         64    1     60.99         54.78         59.21         32.43
+ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
+Z2      30      128     0.2     2*64      -         64    10    63.44         56.97         61.50         50.85
+Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
+...
+... TODO
+
+
+
+
 <EN> CLARIN downsampled train (8696 neg/9000 neu/9415 pos)
 <EN> CLARIN full dev (1863 neg/3555 neu/2019 pos)
 <EN> CLARIN full test (1863 neg/3555 neu/2019 pos)

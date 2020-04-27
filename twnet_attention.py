@@ -115,14 +115,14 @@ embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedd
 # build model
 model = models.Sequential()
 # model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
-model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=False, input_length=MAXLEN))
+model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=True, input_length=MAXLEN))
 # model.add(layers.Conv1D(128, 2, padding='same', activation='relu'))
 # model.add(layers.MaxPooling1D(2))
 # model.add(layers.Flatten())
 model.add(layers.Bidirectional(layers.LSTM(128, return_sequences=True)))
 model.add(layers.Dropout(0.2))
-# model.add(SeqSelfAttention(attention_width=10, attention_activation='sigmoid'))
-model.add(SeqSelfAttention(attention_width=10, attention_type=SeqSelfAttention.ATTENTION_TYPE_MUL, attention_activation=None, kernel_regularizer=regularizers.l2(1e-6), use_attention_bias=False, name='Attention',))
+model.add(SeqSelfAttention(attention_width=10, attention_activation='sigmoid'))
+# model.add(SeqSelfAttention(attention_width=10, attention_type=SeqSelfAttention.ATTENTION_TYPE_MUL, attention_activation=None, kernel_regularizer=regularizers.l2(1e-6), use_attention_bias=False, name='Attention',))
 
 model.add(layers.Flatten())
 model.add(layers.Dense(64, activation='relu'))
@@ -165,6 +165,7 @@ if FINETUNE:
     print('train:', de_train_dir)
     print('dev:', de_dev_dir)
     model2 = models.load_model('best_model.h5', compile=False)
+    model2 = models.load_model('best_model.h5', custom_objects=SeqSelfAttention.get_custom_objects(), compile=False)
     # model2.layers[0].trainable = True
     Adam = optimizers.Adam(learning_rate=0.00001)
     model2.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
