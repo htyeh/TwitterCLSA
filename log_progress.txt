@@ -1,0 +1,50 @@
+introduction
+  - This work studies Bilingual Word Embeddings as the principle component in Cross-lingual Transfer Learning and uses sentiment analysis, specifically that of Tweets as the example domain. Topics for discussion are, for example, whether and to which extent BWE could help overcome the barrier of data scarcity, whether it is beneficial in such a setting to fine-tune the embeddings for the target task (sentiment analysis), and what could be done to improve the system's performance. Two settings of Transfer Learning are studied: the classical setting with data available in the target language for fine-tuning and zero-shot, meaning no fine-tuning in the target language is done.
+
+data collection
+  - Twitter sentiment labeled datasets from SemEval17 (En), CLARIN (En, De) (a European research network in fields including language processing) and the SK-10k German Sentiment Corpus (De). The Tweets are labeld positive, neutral or negative.
+  - apart from SemEval, all sources provide only Tweet IDs, Tweets are retrieved using a publicly available script. After the download Tweets that are no longer available are removed, the resulting Tweets are pre-processed
+
+comparison of datasets under the same zero-shot setting
+  - trained on CLARIN-En and SemEval, both tested on CLARIN-De: En performance comparable, De performance sees a 5% increase in micro when trained with CLARIN-En
+  - combined SemEval and CLARIN-En train set, tested De on both CLARIN-De and SB-10k-De, both tests with De show considerably worse performance than when traning with only CLARIN-En or only SemEval, but with CLARIN-De the test scores are about 5% higher for both metrics (F1s)
+  - combining SemEval with CLARIN-En train set shows no significant improvement for En
+  - over- and downsampling CLARIN-En train set show decrease in performance for En and De: about 3-5% drop in micro and 1% drop in macro
+  - tried using SemEval with CLARIN-De test without cleansing the tweets: about 1% drop
+
+
+hyperparameter search
+  - earlier results may not be reliable, new tests to be run
+
+
+base experiments
+  - lower bound settings where the embedding layer is either randomly initialized or uses pretrained En embeddings. Pre-trained embeddings increase En scores by 2-3%, and surprisingly, De-macro by 9%
+  - the En-embedding-only setting above freezes the embedding layer, a similar setting where the embedding layer is trained is to be tried out
+  - higher bound settings where the network is trained with De data, different sizes of De train set are compared, where a smaller size simulates a 'low resource' setting. With a small amount of training data, overfitting to the majority class when predicting the polarity of German Tweets is observed
+  - in zero-shot settings, the model is trained with En data and tested with both En and De test sets, in classical settings, the model is trained with En data and De data, and tested with En and De test sets
+  - classical transfer-learning settings with BWE either fixed or trained: updating the pre-trained embeddings slightly decreases the performance, fine-tuning the network with De data increases both De-metrics, except when the embedding layer is updated, fine-tuning decreases De-macro by 1%
+  - compared scores when fine-tuning with De data of different sizes
+  - zero-shot settings with BWE either fixed or trained: for both En and De performance is about 1-2% better when the embedding layer is fixed
+  - a mixture of the two above settings, where BWE is fixed for training with En, and unfrozen for tuning: (for De) 1% worse than when BWE is always fixed
+  - concatenating fixed and trainable BWE, for both zero-shot and classical: recorded comparable results as when updating embeddings in zero-shot, and about 2% improvement for both En-metrics and De-macro in classical
+
+
+Enhancers
+  - best learning rates for learning embeddings and the rest layers are searched for separately
+  - EmbEnhancer/ArchEnhancer: training either embeddings or architecture first, freeze the trained part and tune the other. Using the optimal LR found in the previous step
+  - EmbEnhancer does not improve on the original zero-shot/classical settings
+  - ArchEnhancer consistantly improves on the original settings, one of the classical settings beats the best De-scores till then
+
+
+mapping
+  - model is trained to predict sentiment of English Tweets, pre-trained English embeddings are loaded and updated at different LR, De embeddings are mapped to the space of trained En embeddings later with MUSE or VecMap, two libraries for mapping multilingual word embeddings to a common space
+  - settings used for MUSE: supervised/unsupervised
+  - settings used for VecMap: supervised/semi-supervised/unsupervised/identical
+  - configs for merging vectors of duplicating words in the two languages: averaging or keeping the updated (En version) embedding
+  - none of the mapping configs beats the scores with the original De embeddings
+
+
+other experiments
+  - compared GloVe Twitter 100/200d, GloVe CommonCrawl 42B/840B and the original FastText embeddings. FastText has the best performance of all. For GloVe embeddings, De-micro is higher with Twitter embeddings, though De-macro is lower than with CommonCrawl, indicating skewness when using GloVe Twitter. All have better scores than using no pre-trained embeddings
+  - attention added to classical fine-tuning setting with trainable embedding layer: none of the tested configs have better scores for De than using no attention
+  - special architectures like merged CNN+LSTM

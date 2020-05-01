@@ -102,10 +102,10 @@ y_test_de = de_test_labels
 print(x_train[:3])
 print(x_test[:3])
 
-EMBEDDING_DIM = 300
+EMBEDDING_DIM = 100
 
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
-embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.840B.300d.txt', dim=EMBEDDING_DIM)
+embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
+# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.840B.300d.txt', dim=EMBEDDING_DIM)
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.100d.txt', dim=EMBEDDING_DIM)
 
 embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
@@ -113,12 +113,14 @@ embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedd
 # build model
 model = models.Sequential()
 # model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
-model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=False, input_length=MAXLEN))
+model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=True, input_length=MAXLEN))
 # model.add(layers.Conv1D(128, 3, padding='valid', activation='relu'))
 # model.add(layers.MaxPooling1D())
 # model.add(layers.Flatten())
 model.add(layers.Bidirectional(layers.LSTM(128)))
 model.add(layers.Dropout(0.2))
+model.add(layers.Dense(64, activation='relu'))
+model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(3, activation='softmax'))
@@ -153,7 +155,7 @@ print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
 # utils.test_evaluation(gold2, predicted2)
 
 # de fine-tuning
-FINETUNE = False
+FINETUNE = True
 if FINETUNE:
     print('performing classical fine-tuning...')
     print('train:', de_train_dir)
