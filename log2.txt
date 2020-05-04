@@ -407,6 +407,12 @@ LaTex: No
 * [ [cnn(256,3)+maxpool][bilstm(128)+no dropout] ], loc.attention(10), dense(128), dense(64), C4 ArchEnhancer         5934  5701  5751  5057
 * [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], glob.attention, dense(128), dense(64), C4 ArchEnhancer            6058  5732  5960  5083
 
+                                                                En-mic  De-mic En-mac De-mac
+* En train, EmbLayer fixed                            zero-shot: 63.35  58.25  61.33  51.06
+  De train, EmbLayer tuned, rest fixed                fine-tune: 62.37  56.78  61.18  51.51
+  zero-shot / De train, EmbLayer fixed
+  (partial EmbEnhacer)
+
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------

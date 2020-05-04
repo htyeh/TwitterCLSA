@@ -14,8 +14,8 @@ import utils
 from keras import optimizers
 import keras.backend as K
 
-train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
-dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
+train_dir = './TWEETS/CLEAN/sent140/train'
+dev_dir = './TWEETS/CLEAN/sent140/test'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
 de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small10/train'
 de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
@@ -121,18 +121,16 @@ model.add(layers.Bidirectional(layers.LSTM(128)))
 model.add(layers.Dropout(0.2))
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(64, activation='relu'))
-model.add(layers.Dense(64, activation='relu'))
-model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(3, activation='softmax'))
-Adam = optimizers.Adam(learning_rate=0.01)
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
+Adam = optimizers.Adam(learning_rate=0.0001)
+model.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
 print(model.summary())
 print(K.eval(model.optimizer.lr))
 es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=1000, shuffle=True, callbacks=[es, mc])
+history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=256, epochs=1000, shuffle=True, callbacks=[es, mc])
 print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
-# utils.save_embs_2_file(model, 0, tokenizer.word_index)
+utils.save_embs_2_file(model, 0, tokenizer.word_index)
 
 # test_loss, test_acc = model.evaluate(x_test, y_test)
 # print('test loss:', test_loss, 'test acc:', test_acc)
@@ -141,21 +139,11 @@ predicted_en = model.predict(x_test).argmax(axis=1)
 gold_de = y_test_de
 predicted_de = model.predict(x_test_de).argmax(axis=1)
 
-print('sample en gold:', gold_en[:30])
-print('sample en pred:', predicted_en[:30])
-print('micro en:', f1_score(gold_en, predicted_en, average='micro'))
-print('macro en:', f1_score(gold_en, predicted_en, average='macro'))
+utils.test_evaluation(gold_en, predicted_en, gold_de, predicted_de)
 
-print('sample de gold:', gold_de[:30])
-print('sample de pred:', predicted_de[:30])
-print('micro de:', f1_score(gold_de, predicted_de, average='micro'))
-print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
-
-# utils.test_evaluation(gold, predicted)
-# utils.test_evaluation(gold2, predicted2)
 
 # de fine-tuning
-FINETUNE = True
+FINETUNE = False
 if FINETUNE:
     print('performing classical fine-tuning...')
     print('train:', de_train_dir)
@@ -175,15 +163,7 @@ if FINETUNE:
     gold_de = y_test_de
     predicted_de = model2.predict(x_test_de).argmax(axis=1)
 
-    print('sample en gold:', gold_en[:30])
-    print('sample en pred:', predicted_en[:30])
-    print('micro en:', f1_score(gold_en, predicted_en, average='micro'))
-    print('macro en:', f1_score(gold_en, predicted_en, average='macro'))
-
-    print('sample de gold:', gold_de[:30])
-    print('sample de pred:', predicted_de[:30])
-    print('micro de:', f1_score(gold_de, predicted_de, average='micro'))
-    print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
+    utils.test_evaluation(gold_en, predicted_en, gold_de, predicted_de)
 
 # toy tests
 # toy_sents = tokenizer.texts_to_sequences(['the cat sat on the mat', 'what a great movie', 'better not again', 'terrible, worst ever', 'best film ever', 'today is Tuesday'])

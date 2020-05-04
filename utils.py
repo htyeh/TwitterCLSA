@@ -8,6 +8,7 @@ from nltk.corpus import stopwords
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras import backend as K
+from sklearn.metrics import f1_score
 
 def load_data(dir_path):
     texts = []
@@ -85,77 +86,20 @@ def save_embs_2_file(model, emblayer_index, word_index, path='trained_embs.txt')
         for word, emb in word2emb.items():
             output.write(word + ' ' + ' '.join([str(item) for item in emb]) + '\n')
 
-def test_evaluation(gold, predicted):
+def test_evaluation(gold_en, predicted_en, gold_de, predicted_de):
     # gold = y_test; predicted = model.predict(x_test)
-    print('sample gold:', gold[:30])
-    print('sample pred:', predicted[:30])
-    true_positives = {0: 0, 1: 0, 2: 0}
-    false_positives = {0: 0, 1: 0, 2: 0}
-    false_negatives = {0: 0, 1: 0, 2: 0}
-    for i, pred_label in enumerate(predicted):
-        if pred_label == gold[i]:
-            true_positives[pred_label] += 1
-        else:
-            false_positives[pred_label] += 1
-            false_negatives[gold[i]] += 1
-    # macro param.
-    precisions = {}
-    recalls = {}
-    f1s = {}
-    for i in [0, 1, 2]:
-        try:
-            precision = true_positives[i] / (true_positives[i] + false_positives[i])
-            recall = true_positives[i] / (true_positives[i] + false_negatives[i])
-        except ZeroDivisionError:
-            precision = 0.00001
-            recall = 0.00001
-        precisions[i] = precision
-        recalls[i] = recall
-        f1s[i] = 2 * (precision * recall) / (precision + recall)
-    macro_precision = sum(precisions.values()) / 3
-    macro_recall = sum(recalls.values()) / 3
-    macro_f1 = sum(f1s.values()) / 3
-    # micro param.
-    try:
-        micro_precision = sum(true_positives.values()) / (sum(true_positives.values()) + sum(false_positives.values()))
-        micro_recall = sum(true_positives.values()) / (sum(true_positives.values()) + sum(false_negatives.values()))
-    except ZeroDivisionError:
-        micro_precision = 0.00001
-        micro_recall = 0.00001
-    micro_f1 = 2 * (micro_precision * micro_recall) / (micro_precision + micro_recall)
-    # print('macro precision:', macro_precision)
-    # print('macro recall:', macro_recall)
-    print('macro F1:', macro_f1)
-    # print('micro precision:', micro_precision)
-    # print('micro recall:', micro_recall)
-    print('micro F1:', micro_f1)
+    print('sample en gold:', gold_en[:30])
+    print('sample en pred:', predicted_en[:30])
+    print('sample de gold:', gold_de[:30])
+    print('sample de pred:', predicted_de[:30])
+    en_micro = round(f1_score(gold_en, predicted_en, average='micro'), 2)
+    de_micro = round(f1_score(gold_de, predicted_de, average='micro'), 2)
+    en_macro = round(f1_score(gold_en, predicted_en, average='macro'), 2)
+    de_macro = round(f1_score(gold_de, predicted_de, average='macro'), 2)
+    print('{0: <10}'.format('En-micro') + '\t' + '{0: <10}'.format('De-micro') + '\t' + '{0: <10}'.format('En-macro') + '\t' + '{0: <10}'.format('De-macro'))
+    print('{0: <10}'.format(en_micro) + '\t' + '{0: <10}'.format(de_micro) + '\t' + '{0: <10}'.format(en_macro) + '\t' + '{0: <10}'.format(de_macro))
 
-# def micro_f1(gold, predicted):
-#     true_positives = {0: 0, 1: 0, 2: 0}
-#     false_positives = {0: 0, 1: 0, 2: 0}
-#     false_negatives = {0: 0, 1: 0, 2: 0}
-#     for i, pred_label in enumerate(predicted):
-#         if pred_label == gold[i]:
-#             true_positives[pred_label] += 1
-#         else:
-#             false_positives[pred_label] += 1
-#             false_negatives[gold[i]] += 1
-#     try:
-#         micro_precision = sum(true_positives.values()) / (sum(true_positives.values()) + sum(false_positives.values()))
-#         micro_recall = sum(true_positives.values()) / (sum(true_positives.values()) + sum(false_negatives.values()))
-#     except ZeroDivisionError:
-#         micro_precision = 0.00001
-#         micro_recall = 0.00001
-#     micro_f1 = 2 * (micro_precision * micro_recall) / (micro_precision + micro_recall)
-#     return micro_f1
 
-# def f1(y_true, y_pred):
-#     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-#     possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-#     predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
-#     recall = true_positives / (possible_positives + K.epsilon())
-#     precision = true_positives / (predicted_positives + K.epsilon())
-#     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 def list_layers(model):
     print('listing layers...')
@@ -191,3 +135,57 @@ def plot(history):
 #         words = [word for word in tokens if word.isalpha() and word not in sw]
 #         clean_lists.append(words)
 #     return clean_lists
+
+# def f1(y_true, y_pred):
+#     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+#     possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+#     predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+#     recall = true_positives / (possible_positives + K.epsilon())
+#     precision = true_positives / (predicted_positives + K.epsilon())
+#     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
+
+# test_evaluation (old)
+# def test_evaluation(gold, predicted):
+#     # gold = y_test; predicted = model.predict(x_test)
+#     print('sample gold:', gold[:30])
+#     print('sample pred:', predicted[:30])
+#     true_positives = {0: 0, 1: 0, 2: 0}
+#     false_positives = {0: 0, 1: 0, 2: 0}
+#     false_negatives = {0: 0, 1: 0, 2: 0}
+#     for i, pred_label in enumerate(predicted):
+#         if pred_label == gold[i]:
+#             true_positives[pred_label] += 1
+#         else:
+#             false_positives[pred_label] += 1
+#             false_negatives[gold[i]] += 1
+#     # macro param.
+#     precisions = {}
+#     recalls = {}
+#     f1s = {}
+#     for i in [0, 1, 2]:
+#         try:
+#             precision = true_positives[i] / (true_positives[i] + false_positives[i])
+#             recall = true_positives[i] / (true_positives[i] + false_negatives[i])
+#         except ZeroDivisionError:
+#             precision = 0.00001
+#             recall = 0.00001
+#         precisions[i] = precision
+#         recalls[i] = recall
+#         f1s[i] = 2 * (precision * recall) / (precision + recall)
+#     macro_precision = sum(precisions.values()) / 3
+#     macro_recall = sum(recalls.values()) / 3
+#     macro_f1 = sum(f1s.values()) / 3
+#     # micro param.
+#     try:
+#         micro_precision = sum(true_positives.values()) / (sum(true_positives.values()) + sum(false_positives.values()))
+#         micro_recall = sum(true_positives.values()) / (sum(true_positives.values()) + sum(false_negatives.values()))
+#     except ZeroDivisionError:
+#         micro_precision = 0.00001
+#         micro_recall = 0.00001
+#     micro_f1 = 2 * (micro_precision * micro_recall) / (micro_precision + micro_recall)
+#     # print('macro precision:', macro_precision)
+#     # print('macro recall:', macro_recall)
+#     print('macro F1:', macro_f1)
+#     # print('micro precision:', micro_precision)
+#     # print('micro recall:', micro_recall)
+#     print('micro F1:', micro_f1)
