@@ -431,3 +431,15 @@ GloVe Twitter27B, 100-dim               ZM      5     63.02     57.90     61.01 
 GloVe Twitter27B, 200-dim               ZM      3     62.90     58.41     61.41     36.58     De neu-skewed
 GloVe CommonCrawl42B, 300-dim           ZM      3     62.78     49.80     61.43     40.59
 GloVe CommonCrawl840B, 300-dim          ZM      3     63.12     53.62     61.36     41.22
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+SENTIMENT EMBEDDINGS TUNED WITH SENT140
+-------------------------------------------------------------------------------------------------------------------------------------------
+LaTex: No
+
+                                        setting epoch En-micro  De-micro  En-macro  De-macro
+baseline (Z2)                           Z2      10    63.44     56.97     61.50     50.85
+
+filtered vocab absent from corpus       Z2      10    63.99     57.17     62.30     50.15
+tune-bat.=256, eval. on 498 tweets

@@ -5,7 +5,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 import utils
 
-trained_embs_index = utils.load_embs_2_dict('./trained_embs.txt')    # word:nparray
+trained_embs_index = utils.load_embs_2_dict('EMBEDDINGS/trained_BWE_sent140.txt')    # word:nparray
 original_embs_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
 # filtered_embs_index = {word: emb for word, emb in original_embs_index.items() if word in trained_embs_index}
 filtered_embs_index = {word: original_embs_index[word] if word in original_embs_index else np.zeros(100) for word in trained_embs_index}

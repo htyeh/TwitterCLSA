@@ -34,7 +34,7 @@ COMPLETE EXPERIMENT DESCRIPTION
 -------------------------------------------------------------------------------------------------------------------------------------------
 1) baseline: train/dev/test on De
   a) scale De data & test for overfitting
-2) lower & higher bound settings (suggested in https://arxiv.org/pdf/1905.07358.pdf)
+2) lower & upper bound settings (suggested in https://arxiv.org/pdf/1905.07358.pdf)
   a) lo: initialize EmbLayer, test on De directly
   b) lo: fixed [En BWE], test on De directly (sanity check for overlapping words)
   c) hi: training on full De
