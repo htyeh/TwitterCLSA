@@ -17,7 +17,7 @@ import keras.backend as K
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
-de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small10/train'
+de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small0.5/train'
 de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
 de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
 train_texts, train_labels = utils.load_data(train_dir)
@@ -108,98 +108,117 @@ embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
 
 embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
 
-# optimize BWE
-print('optimizing EmbLayer...')
-model = models.Sequential()
-# model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
-model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=True, input_length=MAXLEN))
-model.add(layers.Bidirectional(layers.LSTM(128)))
-model.add(layers.Dropout(0.2))
-model.add(layers.Dense(64, activation='relu'))
-model.add(layers.Dense(64, activation='relu'))
-model.add(layers.Dense(3, activation='softmax'))
-Adam = optimizers.Adam(learning_rate=0.0001)
-model.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
-print(model.summary())
-print('LR:', K.eval(model.optimizer.lr))
-es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=3, restore_best_weights=True, verbose=1)
-mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
-print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
+global_en_mic_train = 0
+global_de_mic_train = 0
+global_en_mac_train = 0
+global_de_mac_train = 0
+global_en_mic_tune = 0
+global_de_mic_tune = 0
+global_en_mac_tune = 0
+global_de_mac_tune = 0
+num_iterations = 5
 
-# freeze BWE
-print('training architecture with frozen EmbLayer...')
-model2 = models.load_model('best_model.h5', compile=False)
-model2.layers[0].trainable = False
-Adam = optimizers.Adam(learning_rate=0.0001)
-model2.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
-print(model2.summary())
-print('LR:', K.eval(model2.optimizer.lr))
-es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
-mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-model2.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
-print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
-
-gold_en = y_test
-predicted_en = model2.predict(x_test).argmax(axis=1)
-gold_de = y_test_de
-predicted_de = model2.predict(x_test_de).argmax(axis=1)
-
-print('sample en gold:', gold_en[:30])
-print('sample en pred:', predicted_en[:30])
-print('micro en:', f1_score(gold_en, predicted_en, average='micro'))
-print('macro en:', f1_score(gold_en, predicted_en, average='macro'))
-
-print('sample de gold:', gold_de[:30])
-print('sample de pred:', predicted_de[:30])
-print('micro de:', f1_score(gold_de, predicted_de, average='micro'))
-print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
-
-# utils.test_evaluation(gold, predicted)
-# utils.test_evaluation(gold2, predicted2)
-
-# de fine-tuning
-FINETUNE = True
-if FINETUNE:
-    print('performing classical fine-tuning...')
-    print('train:', de_train_dir)
-    print('dev:', de_dev_dir)
-    print('fine-tuning embs...')
-    model3 = models.load_model('best_model.h5', compile=False)
-    model3.layers[0].trainable = True
+for i in range(num_iterations):
+    print('training iteration:', i + 1)
+    
+    # optimize BWE
+    print('optimizing EmbLayer...')
+    model = models.Sequential()
+    # model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
+    model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=True, input_length=MAXLEN))
+    model.add(layers.Bidirectional(layers.LSTM(128)))
+    model.add(layers.Dropout(0.2))
+    model.add(layers.Dense(64, activation='relu'))
+    model.add(layers.Dense(64, activation='relu'))
+    model.add(layers.Dense(3, activation='softmax'))
     Adam = optimizers.Adam(learning_rate=0.0001)
-    model3.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
-    print(model3.summary())
-    print(K.eval(model3.optimizer.lr))
+    model.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
+    print(model.summary())
+    print('LR:', K.eval(model.optimizer.lr))
     es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=3, restore_best_weights=True, verbose=1)
-    mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True, save_weights_only=False)
-    model3.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+    mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
+    model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+    print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
 
-    print('fine-tuning architecture...')
-    model4 = models.load_model('best_model.h5', compile=False)
-    model4.layers[0].trainable = False
+    # freeze BWE
+    print('training architecture with frozen EmbLayer...')
+    model2 = models.load_model('best_model.h5', compile=False)
+    model2.layers[0].trainable = False
     Adam = optimizers.Adam(learning_rate=0.0001)
-    model4.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
-    print(model4.summary())
-    print('LR:', K.eval(model4.optimizer.lr))
+    model2.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
+    print(model2.summary())
+    print('LR:', K.eval(model2.optimizer.lr))
     es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
     mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-    model4.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+    model2.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+    print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
 
     gold_en = y_test
-    predicted_en = model4.predict(x_test).argmax(axis=1)
+    predicted_en = model2.predict(x_test).argmax(axis=1)
     gold_de = y_test_de
-    predicted_de = model4.predict(x_test_de).argmax(axis=1)
+    predicted_de = model2.predict(x_test_de).argmax(axis=1)
 
-    print('sample en gold:', gold_en[:30])
-    print('sample en pred:', predicted_en[:30])
-    print('micro en:', f1_score(gold_en, predicted_en, average='micro'))
-    print('macro en:', f1_score(gold_en, predicted_en, average='macro'))
+    en_mic, de_mic, en_mac, de_mac = utils.test_evaluation(gold_en, predicted_en, gold_de, predicted_de)
+    global_en_mic_train += en_mic
+    global_de_mic_train += de_mic
+    global_en_mac_train += en_mac
+    global_de_mac_train += de_mac
 
-    print('sample de gold:', gold_de[:30])
-    print('sample de pred:', predicted_de[:30])
-    print('micro de:', f1_score(gold_de, predicted_de, average='micro'))
-    print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
+    # de fine-tuning
+    FINETUNE = True
+    if FINETUNE:
+        print('performing classical fine-tuning...')
+        print('train:', de_train_dir)
+        print('dev:', de_dev_dir)
+        print('fine-tuning embs...')
+        model3 = models.load_model('best_model.h5', compile=False)
+        model3.layers[0].trainable = True
+        Adam = optimizers.Adam(learning_rate=0.0001)
+        model3.compile(optimizer=Adam, loss='sparse_categorical_crossentropy', metrics=['acc'])
+        print(model3.summary())
+        print(K.eval(model3.optimizer.lr))
+        es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=3, restore_best_weights=True, verbose=1)
+        mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True, save_weights_only=False)
+        model3.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+
+        print('fine-tuning architecture...')
+        model4 = models.load_model('best_model.h5', compile=False)
+        model4.layers[0].trainable = False
+        Adam = optimizers.Adam(learning_rate=0.0001)
+        model4.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
+        print(model4.summary())
+        print('LR:', K.eval(model4.optimizer.lr))
+        es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
+        mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
+        model4.fit(x_train_de, y_train_de, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=100, shuffle=True, callbacks=[es, mc])
+
+        gold_en = y_test
+        predicted_en = model4.predict(x_test).argmax(axis=1)
+        gold_de = y_test_de
+        predicted_de = model4.predict(x_test_de).argmax(axis=1)
+
+        en_mic, de_mic, en_mac, de_mac = utils.test_evaluation(gold_en, predicted_en, gold_de, predicted_de)
+        global_en_mic_tune += en_mic
+        global_de_mic_tune += de_mic
+        global_en_mac_tune += en_mac
+        global_de_mac_tune += de_mac
+
+print('AVG OF', num_iterations, 'TRAIN-ITERATIONS')
+en_micro_train = round( (global_en_mic_train/num_iterations), 4)
+de_micro_train = round( (global_de_mic_train/num_iterations), 4)
+en_macro_train = round( (global_en_mac_train/num_iterations), 4)
+de_macro_train = round( (global_de_mac_train/num_iterations), 4)
+print('{0: <10}'.format('En-micro') + '\t' + '{0: <10}'.format('De-micro') + '\t' + '{0: <10}'.format('En-macro') + '\t' + '{0: <10}'.format('De-macro'))
+print('{0: <10}'.format(en_micro_train) + '\t' + '{0: <10}'.format(de_micro_train) + '\t' + '{0: <10}'.format(en_macro_train) + '\t' + '{0: <10}'.format(de_macro_train))
+
+if FINETUNE:
+    print('AVG OF', num_iterations, 'TUNE-ITERATIONS')
+    en_micro_tune = round( (global_en_mic_tune/num_iterations), 4)
+    de_micro_tune = round( (global_de_mic_tune/num_iterations), 4)
+    en_macro_tune = round( (global_en_mac_tune/num_iterations), 4)
+    de_macro_tune = round( (global_de_mac_tune/num_iterations), 4)
+    print('{0: <10}'.format('En-micro') + '\t' + '{0: <10}'.format('De-micro') + '\t' + '{0: <10}'.format('En-macro') + '\t' + '{0: <10}'.format('De-macro'))
+    print('{0: <10}'.format(en_micro_tune) + '\t' + '{0: <10}'.format(de_micro_tune) + '\t' + '{0: <10}'.format(en_macro_tune) + '\t' + '{0: <10}'.format(de_macro_tune))
 
 # toy tests
 # toy_sents = tokenizer.texts_to_sequences(['the cat sat on the mat', 'what a great movie', 'better not again', 'terrible, worst ever', 'best film ever', 'today is Tuesday'])

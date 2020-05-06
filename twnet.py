@@ -17,7 +17,7 @@ import keras.backend as K
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
-de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small10/train'
+de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small0.5/train'
 de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
 de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
 train_texts, train_labels = utils.load_data(train_dir)
@@ -104,8 +104,8 @@ print(x_test[:3])
 
 EMBEDDING_DIM = 100
 
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
-embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/trained_BWE_sent140.txt')
+embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
+# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/trained_2_sent140.txt')
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.840B.300d.txt', dim=EMBEDDING_DIM)
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.100d.txt', dim=EMBEDDING_DIM)
 
@@ -114,7 +114,7 @@ embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedd
 # build model
 model = models.Sequential()
 # model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
-model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=False, input_length=MAXLEN))
+model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=True, input_length=MAXLEN))
 # model.add(layers.Conv1D(128, 3, padding='valid', activation='relu'))
 # model.add(layers.MaxPooling1D())
 # model.add(layers.Flatten())
@@ -131,7 +131,7 @@ es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, res
 mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
 history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=1000, shuffle=True, callbacks=[es, mc])
 print('trained embedding shape:', model.layers[0].get_weights()[0].shape)
-utils.save_embs_2_file(model, 0, tokenizer.word_index)
+# utils.save_embs_2_file(model, 0, tokenizer.word_index)
 
 # test_loss, test_acc = model.evaluate(x_test, y_test)
 # print('test loss:', test_loss, 'test acc:', test_acc)
@@ -142,18 +142,8 @@ predicted_de = model.predict(x_test_de).argmax(axis=1)
 
 utils.test_evaluation(gold_en, predicted_en, gold_de, predicted_de)
 
-print('sample en gold:', gold_en[:30])
-print('sample en pred:', predicted_en[:30])
-print('micro en:', f1_score(gold_en, predicted_en, average='micro'))
-print('macro en:', f1_score(gold_en, predicted_en, average='macro'))
-
-print('sample de gold:', gold_de[:30])
-print('sample de pred:', predicted_de[:30])
-print('micro de:', f1_score(gold_de, predicted_de, average='micro'))
-print('macro de:', f1_score(gold_de, predicted_de, average='macro'))
-
 # de fine-tuning
-FINETUNE = False
+FINETUNE = True
 if FINETUNE:
     print('performing classical fine-tuning...')
     print('train:', de_train_dir)

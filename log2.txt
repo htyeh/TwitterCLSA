@@ -1,36 +1,7 @@
 -------------------------------------------------------------------------------------------------------------------------------------------
-EXPERIMENT SETTINGS IN THIS LOG
+NOTES
 -------------------------------------------------------------------------------------------------------------------------------------------
-** results recorded in this log:
-  * investigate performance of GloVe Twitter embeddings
-  * investigate effectiveness of pickle-loaded Tokenizer (outdated - loading Tokenizer no longer needed)
-  * compare performance of fine-tuning against zero-shot and monolingual training
-  * compare different fine-tuning data sizes and LR
-  * investigate performance of combining fixed + trainable BWE
-  * propose possibility of training both BWE and rest of the model
-
-(M-monolingual, C-classical transfer, Z-zero-shot transfer)
-M1: EmbLayer
-M2: [EnDe BWE] fixed
-M3: [EnDe BWE] trainable
-M4: [EnDe BWE fixed][EnDe BWE trainable]
-Z1: En train/dev/test, EmbLayer; De test (zero-shot) -> De vocab should have random embeddings
-ZM: En train/dev/test, [En BWE]; De test (zero-shot) -> De vocab should embeddings of 0's
-Z2: En train/dev/test, [EnDe BWE] fixed; De test (zero-shot)
-Z3: En train/dev/test, [EnDe BWE] trainable; De test (zero-shot)
-Z4: En train/dev/test, [EnDe BWE fixed][EnDe BWE trainable]; De test (zero-shot)
-C1: En train/dev/test, EmbLayer; De train/dev/test (fine-tuning)
-C2: En train/dev/test, [EnDe BWE] fixed; De train/dev/test (fine-tuning)
-C3: En train/dev/test, [EnDe BWE] trainable; De train/dev/test (fine-tuning)
-CX: En train/dev/test, [EnDe BWE] fixed; De train/dev/test, [EnDe BWE] trainable (fine-tuning)
-C4: En train/dev/test, [EnDe BWE fixed][EnDe BWE trainable]; De train/dev/test (fine-tuning)
-
-
-
--------------------------------------------------------------------------------------------------------------------------------------------
-PREPARATION FOR CLASSICAL TRANSFER SETTINGS
--------------------------------------------------------------------------------------------------------------------------------------------
-< notes on fine-tuning >
+< fine-tuning >
 ** fine-tuning: try full De / downsized De training
 ** twnet_en trains with en / twnet_de trains with de / evaluation done with twnet_de
 ** Tokenizer from twnet_en saved with pickle / refitting Tokenizer in twnet_de would result in diff. indices and scores
@@ -45,8 +16,25 @@ PREPARATION FOR CLASSICAL TRANSFER SETTINGS
 ** model trained/val. on DE, record scores on EN and DE, save best model
 ** scores recorded under step "tune" can be understood as fine-tuned performance
 ** twnet_final_check loads the final model and checks all scores
+
+< EmbEnhancer >
+** when embs are updated, their weights are optimized after only 1 epoch, this can cause the rest of the model to be undertrained
+** alternative 1 (EmbEnhancer): update embs, load model to train architecture further
+  ** model1: the EmbLayer is trained while EarlyStopping patience set to 0
+  ** model2: EmbLayer is frozen and architecture is trained
+** alternative 2 (ArchEnhancer): train with EmbLayer fixed, load model to tune embs further
+  ** model1: architecture trained with EmbLayer frozen
+  ** model2: unfreeze EmbLayer and tune model (freeze other layers?)
+
+< ArchEnhancer >
+** with the tuned embs, architectures in EmbEnhacer seem to train for few epochs
+** architecture trained with default e-3 LR, embs tuned w/ LR lowered (e-4)
+** in the emb-tuning step all other layers are frozen
+** in classical transfer settings: De data used to first tune architecture, then embs, same as for En
+
 -------------------------------------------------------------------------------------------------------------------------------------------
-< tests with restored pickle >
+PICKLE
+-------------------------------------------------------------------------------------------------------------------------------------------
 <model 1: Tokenizer on EN CLARIN train/dev/test and DE CLARIN test, setting=Z1>
 <model 2: Tokenizer=loaded pickle from model 1>
 <model 3: Tokenizer=loaded pickle from model 1>
@@ -59,116 +47,125 @@ PREPARATION FOR CLASSICAL TRANSFER SETTINGS
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-DE MONOLINGUAL, FULL
+DE FULL
 -------------------------------------------------------------------------------------------------------------------------------------------
-LaTex: Yes
-< monolingual train with full De >
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
 <DE> CLARIN.si full (train 9697/29522/13643; dev 2078/6326/2923; test 2078/6326/2923)
-
+< setting 1 >
 setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M1            30      128     0.2     2*64      -         64              1         -             57.89         -             49.35
+Z1            30      128     0.2     2*64      -         64              1         60.99         54.78         59.21         32.43
+C1            30      128     0.2     2*64      -         64              1         60.56         57.43         57.34         51.52
+
+< setting 2 >
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M2            30      128     0.2     2*64      -         64              6         -             59.49         -             54.13
+Z2            30      128     0.2     2*64      -         64              10        63.44         56.97         61.50         50.85
+C2            30      128     0.2     2*64      -         64              2         60.94         60.04         59.16         54.18
+
+< setting 3 >
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M3            30      128     0.2     2*64      -         64              1         -             58.76         -             52.50
+Z3            30      128     0.2     2*64      -         64              1         62.03         55.38         60.71         49.62
+C3            30      128     0.2     2*64      -         64              1         59.98         57.87         59.29         53.05
+
+< setting 4 >
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M4            30      128     0.2     2*64      -         64              1         -             58.66         -             53.62
+Z4            30      128     0.2     2*64      -         64              1         62.86         56.43         60.74         50.37
+C4            30      128     0.2     2*64      -         64              1         60.63         59.16         59.75         54.60
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-DE MONOLINGUAL, 20%
+DE 20%
 -------------------------------------------------------------------------------------------------------------------------------------------
-LaTex: Yes
-< monolingual train with 20% De >
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
 <DE> CLARIN.si 20% (CLARIN_small20) (train 1939/5904/2729; dev 2078/6326/2923; test 2078/6326/2923)
 
+< setting 1 >
 setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M1            30      128     0.2     2*64      -         64              1         -             55.26         -             41.55
+Z1            30      128     0.2     2*64      -         64              1         60.99         54.78         59.21         32.43
+
+< setting 2 >
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M2            30      128     0.2     2*64      -         64              5         -             58.60         -             50.59
+Z2            30      128     0.2     2*64      -         64              10        63.44         56.97         61.50         50.85
+
+< setting 3 >
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M3            30      128     0.2     2*64      -         64              1         -             57.23         -             48.82
+Z3            30      128     0.2     2*64      -         64              1         62.03         55.38         60.71         49.62
+
+< setting 4 >
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M4            30      128     0.2     2*64      -         64              1         -             56.83         -             48.58
+Z4            30      128     0.2     2*64      -         64              1         62.86         56.43         60.74         50.37
+
 ** observation: still better scores than zero-shot
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-DE MONOLINGUAL, 10%
+DE 10%
 -------------------------------------------------------------------------------------------------------------------------------------------
-LaTex: Yes
-< monolingual train with 10% De >
-<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
 
+< setting 1 >
 setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M1            30      128     0.2     2*64      -         64              1         -             54.25         -             28.21
+Z1            30      128     0.2     2*64      -         64              1         60.99         54.78         59.21         32.43
+C1            30      128     0.2     2*64      -         64              1         60.97         55.79         58.01         45.13
+
+< setting 2 >
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M2            30      128     0.2     2*64      -         64              6         -             56.94         -             50.70
+Z2            30      128     0.2     2*64      -         64              10        63.44         56.97         61.50         50.85
+C2            30      128     0.2     2*64      -         64              2         61.52         60.03         58.94         51.87
+
+< setting 3 >
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M3            30      128     0.2     2*64      -         64              1         -             54.24         -             38.22
+Z3            30      128     0.2     2*64      -         64              1         62.03         55.38         60.71         49.62
+C3            30      128     0.2     2*64      -         64              1         59.88         57.71         58.30         48.23
+
+< setting 4 >
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M4            30      128     0.2     2*64      -         64              1         -             56.37         -             40.36
-** observation: lower scores as dataset size decreases, also overfitting to predicting majority class
-** observation: possible overfitting & underrepresentation of minority classes in low-resource setting (ref. neu-skewness)
-** observation: slightly better scores with zero-shot:
-setting       MAXLEN  bilstm  dropout dense     dropouts  batch epoch               F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-Z1            30      128     0.2     2*64      -         64    1                   60.99         54.78         59.21         32.43
-Z2            30      128     0.2     2*64      -         64    10                  63.44         56.97         61.50         50.85
-Z3            30      128     0.2     2*64      -         64    1                   62.03         55.38         60.71         49.62
-Z4            30      128     0.2     2*64      -         64    1                   62.45         55.86         60.54         50.56
+Z4            30      128     0.2     2*64      -         64              1         62.86         56.43         60.74         50.37
+C4            30      128     0.2     2*64      -         64              1         61.82         57.45         60.88         50.11
 
--------------------------------------------------------------------------------------------------------------------------------------------
-FINE-TUNING, FULL DE
--------------------------------------------------------------------------------------------------------------------------------------------
-LaTex: Yes
-< classical settings, with full De data >
-<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
-<DE> CLARIN.si full (train 9697/29522/13643; dev 2078/6326/2923; test 2078/6326/2923)
-
-setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-C1      train 30      128     0.2     2*64      -         64    1         -         60.93         53.98         59.32         33.26
-        tune  30      128     0.2     2*64      -         64    -         1         60.56         57.43         57.34         51.52
-C2      train 30      128     0.2     2*64      -         64    11        -         63.15         55.64         61.64         50.26
-        tune  30      128     0.2     2*64      -         64    -         2         60.94         60.04         59.16         54.18
-C3      train 30      128     0.2     2*64      -         64    1         -         62.57         55.53         61.02         49.29
-        tune  30      128     0.2     2*64      -         64    -         1         59.98         57.87         59.29         53.05
-** De after fine-tuning comparable to performance in De-monolingual settings
-
--------------------------------------------------------------------------------------------------------------------------------------------
-FINE-TUNING, 10% DE
--------------------------------------------------------------------------------------------------------------------------------------------
-LaTex: Yes
-< classical settings, with 10% De data >
-<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
-<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
-
-setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-C1      train 30      128     0.2     2*64      -         64    1         -         61.29         54.28         59.09         32.60
-        tune  30      128     0.2     2*64      -         64    -         1         60.97         55.79         58.01         45.13
-C2      train 30      128     0.2     2*64      -         64    9         -         63.68         57.29         61.02         50.28
-        tune  30      128     0.2     2*64      -         64    -         2         61.52         60.03         58.94         51.87
-C3      train 30      128     0.2     2*64      -         64    1         -         62.66         55.60         61.26         49.68
-        tune  30      128     0.2     2*64      -         64    -         1         59.88         57.71         58.30         48.23
-C4      train 30      128     0.2     2*64      -         64    1         -         62.87         54.38         61.83         50.48
-        tune  30      128     0.2     2*64      -         64    -         1         61.82         57.45         60.88         50.11
+** possible overfitting & underrepresentation of minority classes in low-resource setting (neu-skewness)
+** slightly worse than zero-shot
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-FIXED + TRAINED EnDeBWE (Z4 & C4)
--------------------------------------------------------------------------------------------------------------------------------------------
-< notes >
-** input Tweet is passed into 2 separate EmbLayers, one of them updated during training
-** BiLSTM input mismatch when using 200-dim merged BWE in Sequential is solved by applying sep. EmbLayers in the functional API
-** C4 would use the 10% De Tweets to fine-tune
+DE 0.5%
 -------------------------------------------------------------------------------------------------------------------------------------------
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
-<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+<DE> CLARIN.si 0.5% (train 48/148/68; dev 2078/6326/2923; test 2078/6326/2923)
 
-setting       MAXLEN  bilstm  dropout dense     dropouts  batch epoch               F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-Z4            30      128     0.2     2*64      -         64    1                   62.45         55.86         60.54         50.56
-setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-C4      train 30      128     0.2     2*64      -         64    1         -         62.87         54.38         61.83         50.48
-        tune  30      128     0.2     2*64      -         64    -         1         61.82         57.45         60.88         50.11
--------------------------------------------------------------------------------------------------------------------------------------------
-< Z4 comparison to Z2 & Z3 >
-<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
-<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+< setting 1 >
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+M1            30      128     0.2     2*64      -         64              5         -             55.85         -             23.89
+Z1            30      128     0.2     2*64      -         64              1         60.99         54.78         59.21         32.43
+C1            30      128     0.2     2*64      -         64              1         60.26         55.48         56.98         31.96
 
-setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-Z2      30      128     0.2     2*64      -         64    10    63.44         56.97         61.50         50.85
-Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
-Z4      30      128     0.2     2*64      -         64    1     62.45         55.86         60.54         50.56
--------------------------------------------------------------------------------------------------------------------------------------------
+< setting 2 >
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+M2            30      128     0.2     2*64      -         64              6         -             55.85         -             23.89
+Z2            30      128     0.2     2*64      -         64              10        63.44         56.97         61.50         50.85
+C2            30      128     0.2     2*64      -         64              2         62.21         59.26         58.21         48.32
 
+< setting 3 >
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+M3            30      128     0.2     2*64      -         64              5         -             55.85         -             23.89
+Z3            30      128     0.2     2*64      -         64              1         62.03         55.38         60.71         49.62
+C3            30      128     0.2     2*64      -         64              1         61.84         58.67         59.06         46.96
+
+< setting 4 >
+setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+M4            30      128     0.2     2*64      -         64              6         -             55.51         -             27.31
+Z4            30      128     0.2     2*64      -         64              1         62.86         56.43         60.74         50.37
+C4            30      128     0.2     2*64      -         64              1         62.85         57.23         61.01         50.42
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -178,6 +175,7 @@ LaTex: No
 < Adam default=0.001 >
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
 <DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+
 setting LR      MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 C2      0.01    30      128     0.2     2*64      -         64    1     59.27         60.43         55.16         48.62
 C2      0.001   30      128     0.2     2*64      -         64    3     62.07         59.42         60.76         52.22
@@ -188,7 +186,7 @@ C2      e-6     30      128     0.2     2*64      -         64    1     62.15   
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-EMB/ARCH JOINT OPTIMIZATION (ENHANCER SETTINGS)
+HYPERPARAM. SEARCH FOR EMB/ARCH JOINT OPTIMIZATION
 -------------------------------------------------------------------------------------------------------------------------------------------
 LaTex: Yes
 < effect of LR on optimizing embeddings >
@@ -229,144 +227,169 @@ C2      5e-4    30      128     0.2     2*64      -         64    3     62.03   
 C2      e-4     30      128     0.2     2*64      -         64    6     62.00         59.09         60.57         51.85
 C2      e-5     30      128     0.2     2*64      -         64    30    62.84         58.77         60.78         50.89
 
+
 -------------------------------------------------------------------------------------------------------------------------------------------
-< experiments with EmbEnhancer: notes >
-** when embs are updated, their weights are optimized after only 1 epoch, this can cause the rest of the model to be undertrained
-** alternative 1 (EmbEnhancer): update embs, load model to train architecture further
-  ** model1: the EmbLayer is trained while EarlyStopping patience set to 0
-  ** model2: EmbLayer is frozen and architecture is trained
-** alternative 2 (ArchEnhancer): train with EmbLayer fixed, load model to tune embs further
-  ** model1: architecture trained with EmbLayer frozen
-  ** model2: unfreeze EmbLayer and tune model (freeze other layers?)
-** Enh.settings should be compared with corresponding 'fixed EmbLayer' settings, e.g. Z2
+EMB-ENHANCER DE 10%
 -------------------------------------------------------------------------------------------------------------------------------------------
 LaTex: Yes
-< experiments with EmbEnhancer compared with same settings w/o Enhancer >
-** note: embs tuned w/ LR lowered (e-4), for architecture training default e-3 & e-4 LR are tried out
+
+< baseline >
+setting LR(emb) LR(arch)        epo(emb,arch)                       En-micro  De-micro  En-macro  De-macro
+Z2      -       e-3             -,10                                63.44     56.97     61.50     50.85
+C2      -       e-3             -,2                                 61.52     60.03     58.94     51.87
+
+< setting 1 >
 setting LR(emb) LR(arch)        epo(emb,arch)                       En-micro  De-micro  En-macro  De-macro
 Z1      -       e-3             -,1                                 60.99     54.78     59.21     32.43
-Z2      -       e-3             -,10                                63.44     56.97     61.50     50.85
 Enh.Z1  e-4     e-3             3,2                                 59.75     49.61     58.27     36.17
 Enh.Z1  e-4     e-4             2,4                                 60.14     53.06     59.08     34.01
+C1      -       e-3             -,1                                 60.97     55.79     58.01     45.13
+Enh.C1  e-4     e-3             1,2                                 57.89     51.80     56.47     39.43
+Enh.C1  e-4     e-2             1,1                                 55.99     55.00     48.64     33.90
 
+< setting 3 >
+setting LR(emb) LR(arch)        epo(emb,arch)                       En-micro  De-micro  En-macro  De-macro
 Z3      -       e-3             -,1                                 62.03     55.38     60.71     49.62
-Z2      -       e-3             -,10                                63.44     56.97     61.50     50.85
 Enh.Z3  e-4     e-3             2,2                                 61.53     48.62     60.47     47.08
 Enh.Z3  e-4     e-4             2,4                                 62.12     48.01     61.04     46.13
+C3      -       e-3             -,1                                 59.88     57.71     58.30     48.23
+Enh.C3  e-4     e-4             1,10                                61.38     56.57     59.97     50.27
+Enh.C3  e-4     e-3             1,2                                 61.22     58.32     58.77     49.79
+Enh.C3  e-4     e-2             1,2                                 59.28     58.94     55.95     48.80
 
-Z4      -       e-3             -,1                                 62.45     55.86     60.54     50.56
-Z2      -       e-3             -,10                                63.44     56.97     61.50     50.85
+< setting 4 >
+setting LR(emb) LR(arch)        epo(emb,arch)                       En-micro  De-micro  En-macro  De-macro
+Z4      -       e-3             -,1                                 62.86     56.43     60.74     50.37
 Enh.Z4  e-4     e-3             2,2                                 60.56     48.43     59.99     47.12
 Enh.Z4  e-4     e-4             2,3                                 61.48     51.74     60.34     49.87
+C4      -       e-3             -,1                                 61.82     57.45     60.88     50.11
+Enh.C4  e-4     e-4             1,4                                 61.51     57.81     60.06     51.04
+Enh.C4  e-4     e-3             1,1                                 59.97     57.35     58.75     50.64
+Enh.C4  e-4     e-2             1,5                                 55.63     55.28     54.18     49.58
 
-setting LR(emb) LR(arch)  step  epo-en(emb,arch)  epo-de(emb,arch)  En-micro  De-micro  En-macro  De-macro
-C2      -       e-3       train 9                                   63.68     57.29     61.02     50.28
-                          tune  30                2                 61.52     60.03     58.94     51.87
 
-C1      -       e-3       train 1                 -                 61.29     54.28     59.09     32.60
-                          tune  -                 1                 60.97     55.79     58.01     45.13
-Enh.C1  e-4     e-3       train 3,4               -,-               59.63     50.08     58.20     34.95
-                          tune  -,-               1,2               57.89     51.80     56.47     39.43
-Enh.C1  e-4     e-3       train 2,5               -,-               59.09     51.31     57.62     35.66
-        e-4     0.01      tune  -,-               1,1               55.99     55.00     48.64     33.90
-
-C3      -       e-3       train 1                 -                 62.66     55.60     61.26     49.68
-                          tune  -                 1                 59.88     57.71     58.30     48.23
-Enh.C3  e-4     e-3       train 2,4               -,-               61.57     46.47     60.42     46.07
-                          tune  -,-               1,2               61.22     58.32     58.77     49.79
-Enh.C3  e-4     e-3       train 2,3               -,-               61.64     49.74     60.26     46.48
-        e-4     0.01      tune  -,-               1,2               59.28     58.94     55.95     48.80
-Enh.C3  e-4     e-3       train 2,2               -,-               61.94     47.57     60.88     46.04
-        e-4     e-4       tune  -,-               1,10              61.38     56.57     59.97     50.27
-
-C4      -       e-3       train 1                 -                 62.87     54.38     61.83     50.48
-                          tune  -                 1                 61.82     57.45     60.88     50.11
-Enh.C4  e-4     e-3       train 2,1               -,-               61.39     53.86     59.90     49.60
-                          tune  -,-               1,1               59.97     57.35     58.75     50.64
-Enh.C4  e-4     e-3       train 2,1               -,-               61.66     55.25     59.17     49.59
-        e-4     0.01      tune  -,-               1,5               55.63     55.28     54.18     49.58
-Enh.C4  e-4     e-3       train 2,2               -,-               60.63     48.78     59.90     47.59
-        e-4     e-4       tune  -,-               1,4               61.51     57.81     60.06     51.04
-
-** observation: if the hypothesis 'trainable EmbLayer is NOT beneficial' is correct, Enh. should perform better than corresponding 'trainable EmbLayer' setting and worse than corresponding 'fixed EmbLayer' (Z2) setting
-** observation: Enh. versions of Z1/Z3/Z4 (meaning: tuned embs + trained with EmbLayer fixed) perform worse than Z2 (fixed EmbLayer)
-** observation: Enh. versions of Z1/Z3/Z4 also worse than original Z1/Z3/Z4, this is either irrelevant as Enh. versions are trained for 1 more epoch only, or the trained embs affect the ability of the other layers to learn
-** observation: EmbEnhacer scores rather unstable
 -------------------------------------------------------------------------------------------------------------------------------------------
-< experiments with ArchEnhancer: notes >
-** with the tuned embs, architectures in EmbEnhacer seem to train for few epochs
-** architecture trained with default e-3 LR, embs tuned w/ LR lowered (e-4)
-** in the emb-tuning step all other layers are frozen
-** in classical transfer settings: De data used to first tune architecture, then embs, same as for En
+EMB-ENHANCER DE 0.5%
+-------------------------------------------------------------------------------------------------------------------------------------------
+LaTex: No
+
+< baseline >
+setting LR(emb) LR(arch)        epo(emb,arch)                       En-micro  De-micro  En-macro  De-macro
+Z2      -       e-3             -,10                                63.44     56.97     61.50     50.85
+C2      -       e-3             -,2                                 62.21     59.26     58.21     48.32
+C4      -       e-3             -,1                                 62.85     57.23     61.01     50.42
+
+< setting 1 >
+setting LR(emb) LR(arch)        epo(emb,arch)                       En-micro  De-micro  En-macro  De-macro
+Z1      -       e-3             -,1                                 60.99     54.78     59.21     32.43
+Enh.Z1  e-4     e-3             3,2                                 59.75     49.61     58.27     36.17
+Enh.Z1  e-4     e-4             2,4                                 60.14     53.06     59.08     34.01
+C1      -       e-3             -,1                                 60.26     55.48     56.98     31.96
+Enh.C1  e-4     e-3             7,2                                 57.82     47.36     57.33     38.04
+Enh.C1  e-4     e-2             OMIT FOR EFFICIENCY
+
+< setting 3 >
+setting LR(emb) LR(arch)        epo(emb,arch)                       En-micro  De-micro  En-macro  De-macro
+Z3      -       e-3             -,1                                 62.03     55.38     60.71     49.62
+Enh.Z3  e-4     e-3             2,2                                 61.53     48.62     60.47     47.08
+Enh.Z3  e-4     e-4             2,4                                 62.12     48.01     61.04     46.13
+C3      -       e-3             -,1                                 61.84     58.67     59.06     46.96
+Enh.C3  e-4     e-4             OMIT FOR EFFICIENCY
+Enh.C3  e-4     e-3             8,2                                 61.10     53.68     60.23     49.92
+Enh.C3  e-4     e-2             OMIT FOR EFFICIENCY
+
+< setting 4 >
+setting LR(emb) LR(arch)        epo(emb,arch)                       En-micro  De-micro  En-macro  De-macro
+Z4      -       e-3             -,1                                 62.86     56.43     60.74     50.37
+Enh.Z4  e-4     e-3             2,2                                 60.56     48.43     59.99     47.12
+Enh.Z4  e-4     e-4             2,3                                 61.48     51.74     60.34     49.87
+C4      -       e-3             -,1                                 62.85     57.23     61.01     50.42
+Enh.C4  e-4     e-4             OMIT FOR EFFICIENCY
+Enh.C4  e-4     e-3             5,2                                 59.74     53.60     59.20     50.18
+Enh.C4  e-4     e-2             OMIT FOR EFFICIENCY
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+ARCH-ENHANCER DE 10%
 -------------------------------------------------------------------------------------------------------------------------------------------
 LaTex: Yes
-< experiments with ArchEnhancer compared with same settings w/o Enhancer >
-setting LR(arch)  LR(emb) MAXLEN  bilstm  dropout dense     dropouts  bat.  epo(arch) epo(emb) En-micro  De-micro  En-macro  De-macro
-Z2      e-3       -       30      128     0.2     2*64      -         64    -         10        63.44     56.97     61.50     50.85
-Z3      e-3       -       30      128     0.2     2*64      -         64    1         -         62.03     55.38     60.71     49.62
-Enh.Z3  e-3       e-4     30      128     0.2     2*64      -         64    7         1         64.48     56.10     63.11     50.42
-*Enh.Z3 e-3       e-4     30      128     0.2     2*64      -         64    10        1         64.01     56.28     62.72     50.53
-* w/o rest of layers frozen
 
-Z2      e-3       -       30      128     0.2     2*64      -         64    -         10        63.44     56.97     61.50     50.85
-Z4      e-3       -       30      128     0.2     2*64      -         64    1         -         62.45     55.86     60.54     50.56
-Enh.Z4  e-3       e-4     30      128     0.2     2*64      -         64    8         3         64.05     57.41     62.72     51.02
+< baseline >
+setting LR(arch)  LR(emb)       epo(arch,emb)                       En-micro  De-micro  En-macro  De-macro
+Z2      e-3       -             10,-                                63.44     56.97     61.50     50.85
+C2      e-3       -             2,-                                 61.52     60.03     58.94     51.87
+
+< setting 3 >
+setting LR(arch)  LR(emb)       epo(arch,emb)                       En-micro  De-micro  En-macro  De-macro
+Z3      e-3       -             1,-                                 62.03     55.38     60.71     49.62
+Enh.Z3  e-3       e-4           7,1                                 64.48     56.10     63.11     50.42
+*Enh.Z3 e-3       e-4           10,1                                64.01     56.28     62.72     50.53
+* w/o rest of layers frozen
+C3      e-3       -             1,-                                 59.88     57.71     58.30     48.23
+Enh.C3  e-2       e-4           2,1                                 60.02     59.57     58.89     53.00
+Enh.C3  e-3       e-4           2,1                                 62.29     60.07     61.09     52.83         > baseline
+Enh.C3  e-4       e-4           6,1                                 63.36     59.34     61.64     51.59
+
+< setting 4 >
+setting LR(arch)  LR(emb)       epo(arch,emb)                       En-micro  De-micro  En-macro  De-macro
+Z4      e-3       -             1,-                                 62.86     56.43     60.74     50.37
+Enh.Z4  e-3       e-4           8,3                                 64.05     57.41     62.72     51.02
+C4      e-3       -             1,-                                 61.82     57.45     60.88     50.11
+Enh.C4  e-2       e-4           2,2                                 59.78     59.77     57.35     50.46
+Enh.C4  e-3       e-4           1,1                                 62.88     59.97     61.32     51.96         ? > baseline
+Enh.C4  e-4       e-4           8,2                                 63.18     59.08     61.58     51.97         ? > baseline
+
+< setting CX >
+** En-step as in C2 (trained with fixed BWE)
+** De-step as in C3 (tune with unfrozen BWE)
+setting LR(arch)  LR(emb)       epo(arch,emb)                       En-micro  De-micro  En-macro  De-macro
+CX      e-3       e-4           1,-                                 63.05     59.08     60.41     50.99
+Enh.CX  e-2       e-4           1,2                                 58.67     59.68     56.29     50.23
+Enh.CX  e-3       e-4           1,1                                 63.09     59.46     61.42     52.25
+Enh.CX  e-4       e-4           6,1                                 62.18     59.45     60.11     51.64
 
 ** observation: contrary to what EmbEnhancer seems to prove, tuned embs in this setting improves performance (comp. Z2 with Enh.Z3/Z4)
 ** observation: ArchEnhancer > fixed BWE > trainable BWE > EmbEnhacer
 ** next step: try on fine-tuning settings
 ** hypothesis: if tuned beforehand, sentiment-embs limit the capacity of arch. training and thus worsen the performance
 ** hypothesis: is it ok to tune embs to a fixed architecture?
-
-setting LR(arch)  LR(emb) step  epo-en(arch,emb)  epo-de(arch,emb)  En-micro  De-micro  En-macro  De-macro
-C3      e-3       -       train 1,-               -,-               62.66     55.60     61.26     49.68
-                          tune  -,-               1,-               59.88     57.71     58.30     48.23
-Enh.C3  e-3       e-4     train 11,1              -,-               64.12     56.70     62.64     49.79
-        0.01      e-4     tune  -,-               2,1               60.02     59.57     58.89     53.00
-Enh.C3  e-3       e-4     train 9,2               -,-               64.34     55.94     63.05     50.25
-                          tune  -,-               2,1               62.29     60.07     61.09     52.83
-Enh.C3  e-3       e-4     train 7,2               -,-               64.14     56.19     62.81     50.56
-        e-4       e-4     tune  -,-               6,1               63.36     59.34     61.64     51.59
-
-C4      e-3       -       train 1,-               -,-               62.87     54.38     61.83     50.48
-                          tune  -,-               1,-               61.82     57.45     60.88     50.11
-Enh.C4  e-3       e-4     train 8,2               -,-               64.28     56.51     62.88     50.70
-        0.01      e-4     tune  -,-               2,2               59.78     59.77     57.35     50.46
-Enh.C4  e-3       e-4     train 8,2               -,-               64.20     55.82     62.96     50.03
-                          tune  -,-               1,1               62.88     59.97     61.32     51.96
-Enh.C4  e-3       e-4     train 7,3               -,-               64.10     56.12     62.80     51.13
-        e-4       e-4     tune  -,-               8,2               63.18     59.08     61.58     51.97
-
 ** observation: Enh.C3 outperforms setting C2 w/ fixed BWE, C3 w/ trainable BWE
 ** observation: Enh.C4 outperforms original C4, C2 w/ fixed BWE, C3 w/ trainable BWE
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-CX: FROZEN EnDeBWE FOR EN, TUNED FOR DE
+ARCH-ENHANCER DE 0.5%
 -------------------------------------------------------------------------------------------------------------------------------------------
 LaTex: Yes
-setting step  MAXLEN  bilstm  dropout dense     dropouts  batch epoch-en  epoch-de  F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-C2      train 30      128     0.2     2*64      -         64    9         -         63.68         57.29         61.02         50.28
-        tune  30      128     0.2     2*64      -         64    -         2         61.52         60.03         58.94         51.87
-C3      train 30      128     0.2     2*64      -         64    1         -         62.66         55.60         61.26         49.68
-        tune  30      128     0.2     2*64      -         64    -         1         59.88         57.71         58.30         48.23
-CX      train 30      128     0.2     2*64      -         64    12        -         63.36         56.30         61.55         50.27
-        tune  30      128     0.2     2*64      -         64    -         1         63.05         59.08         60.41         50.99
--------------------------------------------------------------------------------------------------------------------------------------------
-LaTex: Yes
-< CX with ArchEnhancer >
-** En-step as in C2 (trained with fixed BWE)
-** De-step as in C3 (tune with unfrozen BWE)
 
-setting LR(arch)  LR(emb) step  epo-en  epo-de(arch,emb)  En-micro  De-micro  En-macro  De-macro
-Enh.CX  e-3       -       train 10      -,-               63.11     55.76     61.49     49.50
-        0.01      e-4     tune  -       1,2               58.67     59.68     56.29     50.23
+< baseline >
+setting LR(arch)  LR(emb)       epo(arch,emb)                       En-micro  De-micro  En-macro  De-macro
+Z2      e-3       -             10,-                                63.44     56.97     61.50     50.85
+C2      e-3       -             2,-                                 62.21     59.26     58.21     48.32
+C4      e-3       -             1,-                                 62.85     57.23     61.01     50.42
 
-Enh.CX  e-3       -       train 10      -,-               63.21     56.19     61.67     50.24
-        e-3       e-4     tune  -       1,1               63.09     59.46     61.42     52.25
+< setting 3 >
+setting LR(arch)  LR(emb)       epo(arch,emb)                       En-micro  De-micro  En-macro  De-macro
+Z3      e-3       -             1,-                                 62.03     55.38     60.71     49.62
+Enh.Z3  e-3       e-4           7,1                                 64.48     56.10     63.11     50.42
+*Enh.Z3 e-3       e-4           10,1                                64.01     56.28     62.72     50.53
+* w/o rest of layers frozen
+C3      e-3       -             1,-                                 61.84     58.67     59.06     46.96
+Enh.C3  e-2       e-4
+Enh.C3  e-3       e-4           2,1                                 63.42     59.64     60.68     49.22       about SOTA w/ De 20%
+Enh.C3  e-4       e-4
 
-Enh.CX  e-3       -       train 9       0,0               63.41     56.36     61.18     49.76
-        e-4       e-4     tune  -       6,1               62.18     59.45     60.11     51.64
+< setting 4 >
+setting LR(arch)  LR(emb)       epo(arch,emb)                       En-micro  De-micro  En-macro  De-macro
+Z4      e-3       -             1,-                                 62.86     56.43     60.74     50.37
+Enh.Z4  e-3       e-4           8,3                                 64.05     57.41     62.72     51.02
+C4      e-3       -             1,-                                 62.85     57.23     61.01     50.42
+Enh.C4  e-2       e-4
+Enh.C4  e-3       e-4
+Enh.C4  e-4       e-4
+
+
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -398,14 +421,14 @@ LaTex: No
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
 <DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
 
-* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], dense(64), dense(64), C4 ArchEnhancer                             5953  5770  5814  4995
-* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], dense(128), dense(64), C4 ArchEnhancer                            6055  6016  5745  4867
-* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], dense(256), dense(128), C4 ArchEnhancer                           5906  5874  5720  4986
-* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], loc.attention(10), dense(128), dense(64), C4 ArchEnhancer         6150  5935  6027  5134
-* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], loc.attention(10), dense(128), dense(64), C3 ArchEnhancer         6087  5857  5969  5086
-* [ [cnn(128,3)+maxpool][bilstm(128)+dropout(0.2)] ], loc.attention(10), dense(128), dense(64), C3 ArchEnhancer       6097  5940  5896  5077
-* [ [cnn(256,3)+maxpool][bilstm(128)+no dropout] ], loc.attention(10), dense(128), dense(64), C4 ArchEnhancer         5934  5701  5751  5057
-* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], glob.attention, dense(128), dense(64), C4 ArchEnhancer            6058  5732  5960  5083
+* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], dense(64), dense(64), C4 ArchEnhancer                            59.53  57.70  58.14  49.95
+* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], dense(128), dense(64), C4 ArchEnhancer                           60.55  60.16  57.45  48.67
+* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], dense(256), dense(128), C4 ArchEnhancer                          59.06  58.74  57.20  49.86
+* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], loc.attention(10), dense(128), dense(64), C4 ArchEnhancer        61.50  59.35  60.27  51.34
+* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], loc.attention(10), dense(128), dense(64), C3 ArchEnhancer        60.87  58.57  59.69  50.86
+* [ [cnn(128,3)+maxpool][bilstm(128)+dropout(0.2)] ], loc.attention(10), dense(128), dense(64), C3 ArchEnhancer      60.97  59.40  58.96  50.77
+* [ [cnn(256,3)+maxpool][bilstm(128)+no dropout] ], loc.attention(10), dense(128), dense(64), C4 ArchEnhancer        59.34  57.01  57.51  50.57
+* [ [cnn(128,3)+maxpool][bilstm(128)+no dropout] ], glob.attention, dense(128), dense(64), C4 ArchEnhancer           60.58  57.32  59.60  50.83
 
                                                                 En-mic  De-mic En-mac De-mac
 * En train, EmbLayer fixed                            zero-shot: 63.35  58.25  61.33  51.06
@@ -443,3 +466,15 @@ baseline (Z2)                           Z2      10    63.44     56.97     61.50 
 
 filtered vocab absent from corpus       Z2      10    63.99     57.17     62.30     50.15
 tune-bat.=256, eval. on 498 tweets
+tune-LR=e-4
+
+filtered vocab absent from corpus       Z2
+tune-bat.=512, eval. on 498 tweets
+tune-LR=e-4
+
+filtered vocab absent from corpus       Z2      12    63.33     56.01     61.44     44.07
+tune-bat.=512, eval. on 359 tweets
+tune-LR=e-4, tune-task=binary
+
+
+** Z2 = practically ZM - De vocabs filtered out during sent140 tuning

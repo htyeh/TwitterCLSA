@@ -28,6 +28,22 @@ def load_data(dir_path):
                     labels.append(2)
     return texts, labels
 
+def load_data_binary(dir_path):
+    texts = []
+    labels = []
+    for label_file in ['neg.tsv', 'pos.tsv']:
+        file_path = os.path.join(dir_path, label_file)
+        print('loading ' + file_path + '...')
+        with open(file_path) as f:
+            for line in f:
+                id, polarity, text = [item.strip() for item in line.split('\t')]
+                texts.append(text)
+                if polarity.lower() == 'negative':
+                    labels.append(0)
+                elif polarity.lower() == 'positive':
+                    labels.append(1)
+    return texts, labels
+
 def vectorize(texts, labels, max_words, maxlen):
     print('transforming into vectors...')
     tokenizer = Tokenizer(num_words=max_words)
@@ -98,6 +114,7 @@ def test_evaluation(gold_en, predicted_en, gold_de, predicted_de):
     de_macro = round(f1_score(gold_de, predicted_de, average='macro'), 4)
     print('{0: <10}'.format('En-micro') + '\t' + '{0: <10}'.format('De-micro') + '\t' + '{0: <10}'.format('En-macro') + '\t' + '{0: <10}'.format('De-macro'))
     print('{0: <10}'.format(en_micro) + '\t' + '{0: <10}'.format(de_micro) + '\t' + '{0: <10}'.format(en_macro) + '\t' + '{0: <10}'.format(de_macro))
+    return en_micro, de_micro, en_macro, de_macro
 
 
 

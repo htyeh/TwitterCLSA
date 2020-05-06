@@ -14,6 +14,9 @@ SB-10K: link: https://www.spinningbytes.com/resources/germansentiment/
 <EN> CLARIN.si oversampled (train 16590/16590/16590; dev 1153/3328/2941; test 1153/3328/2941)
 <EN> CLARIN.si downsampled (train 8696/9000/9415; dev 1863/3555/2019; test 1863/3555/2019)
 <DE> CLARIN.si full (train 9697/29522/13643; dev 2078/6326/2923; test 2078/6326/2923)
+<DE> CLARIN.si 20% (train 1939/5904/2729; dev 2078/6326/2923; test 2078/6326/2923)
+<DE> CLARIN.si 10% (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+<DE> CLARIN.si 0.5% (train 48/148/68; dev 2078/6326/2923; test 2078/6326/2923)
 <DE> SB-10k (989 neg/4131 neu/1509 pos)
 <DE> SB-10k balanced (989 neg/1500 neu/1509 pos)
 >Train/Dev/Test split: 70/15/15
@@ -61,18 +64,25 @@ COMPLETE EXPERIMENT DESCRIPTION
 11) train En EmbLayer, map De to En space
 
 * only En part of [EnDe BWE] get updates (no training on De vocab)
--------------------------------------------------------------------------------------------------------------------------------------------
-EXPERIMENT SETTINGS IN THIS LOG
--------------------------------------------------------------------------------------------------------------------------------------------
-** results recorded in this log:
-  * compare basic scores on different datasets
-  * compare basic scores on different model architectures
 
-(C-classical transfer, Z-zero-shot transfer)
+-------------------------------------------------------------------------------------------------------------------------------------------
+COMPLETE EXPERIMENT SETTINGS
+-------------------------------------------------------------------------------------------------------------------------------------------
+(M-monolingual, C-classical, Z-zero-shot)
+M1: EmbLayer
+M2: [EnDe BWE] fixed
+M3: [EnDe BWE] trainable
+M4: [EnDe BWE fixed][EnDe BWE trainable]
 Z1: En train/dev/test, EmbLayer; De test (zero-shot) -> De vocab should have random embeddings
-ZM: En train/dev/test, [En BWE] fixed; De test (zero-shot) -> De vocab should have all 0 embeddings
+ZM: En train/dev/test, [En BWE]; De test (zero-shot) -> De vocab should embeddings of 0's
 Z2: En train/dev/test, [EnDe BWE] fixed; De test (zero-shot)
 Z3: En train/dev/test, [EnDe BWE] trainable; De test (zero-shot)
+Z4: En train/dev/test, [EnDe BWE fixed][EnDe BWE trainable]; De test (zero-shot)
+C1: En train/dev/test, EmbLayer; De train/dev/test (fine-tuning)
+C2: En train/dev/test, [EnDe BWE] fixed; De train/dev/test (fine-tuning)
+C3: En train/dev/test, [EnDe BWE] trainable; De train/dev/test (fine-tuning)
+CX: En train/dev/test, [EnDe BWE] fixed; De train/dev/test, [EnDe BWE] trainable (fine-tuning)
+C4: En train/dev/test, [EnDe BWE fixed][EnDe BWE trainable]; De train/dev/test (fine-tuning)
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
