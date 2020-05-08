@@ -204,6 +204,7 @@ for i in range(num_iterations):
         global_en_mac_tune += en_mac
         global_de_mac_tune += de_mac
 
+print()
 print('AVG OF', num_iterations, 'TRAIN-ITERATIONS')
 en_micro_train = round( (global_en_mic_train/num_iterations), 4)
 de_micro_train = round( (global_de_mic_train/num_iterations), 4)

@@ -386,7 +386,7 @@ Z4      e-3       -             1,-                                 62.86     56
 Enh.Z4  e-3       e-4           8,3                                 64.05     57.41     62.72     51.02
 C4      e-3       -             1,-                                 62.85     57.23     61.01     50.42
 Enh.C4  e-2       e-4
-Enh.C4  e-3       e-4
+Enh.C4  e-3       e-4           2,3                                 62.60     59.76     59.86     50.82       > baseline
 Enh.C4  e-4       e-4
 
 
@@ -464,17 +464,14 @@ LaTex: No
                                         setting epoch En-micro  De-micro  En-macro  De-macro
 baseline (Z2)                           Z2      10    63.44     56.97     61.50     50.85
 
-filtered vocab absent from corpus       Z2      10    63.99     57.17     62.30     50.15
+filtered vocab absent from corpus       ZM      10    63.99     57.17     62.30     50.15
 tune-bat.=256, eval. on 498 tweets
 tune-LR=e-4
 
-filtered vocab absent from corpus       Z2
+filtered vocab absent from corpus       ZM      10    64.04     57.72     62.47     50.03
 tune-bat.=512, eval. on 498 tweets
 tune-LR=e-4
 
-filtered vocab absent from corpus       Z2      12    63.33     56.01     61.44     44.07
+filtered vocab absent from corpus       ZM      12    63.33     56.01     61.44     44.07
 tune-bat.=512, eval. on 359 tweets
 tune-LR=e-4, tune-task=binary
-
-
-** Z2 = practically ZM - De vocabs filtered out during sent140 tuning

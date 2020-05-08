@@ -21,61 +21,40 @@ Collados et al.   0.01      0.48
                   e-6       0.64
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-< Z5 setting: notes >
-** only EnBWE is loaded, monolingual training using En data
-** trained EnBWE is saved, DeBWE is mapped to the EnBWE space
-  ** Enhancers (embs or architecture) not considered in this setting, entire model trained together
-** two types of merging identical vocabs considered: averaged & keeping only En
+MUSE & VECMAP: NOTES
+-------------------------------------------------------------------------------------------------------------------------------------------
+** train: En embeddings + En datasets, emb-LR=e-4
+** save trained embeddings
+** map De embeddings to En space (MUSE/VecMap)
+** resulting En space much smaller than De because of corpora-vocab filtering
+** consider two types of identical vocab merger: avg & keep-en
 ** evaluation on the merged EnDeBWE (refer to section 'INTRINSIC EVALUATION')
-** this setting should be compared with Z3 (trainable EnBWE) and C3 (trainable EnBWE + fine-tuned DeBWE)
-** adjuestments to MUSE parameters unsupervised: epoch_size 100000/500000, default emb_dim=100
+
+< implementation example >
+** 53626 tokens found in En datasets
+** 412776 De vocabs to map
+** 24154 overlapping tokens
+** 442248 embeddings in the merged BWE
+** merged BWE fed to perform Z2/C2
+
+< MUSE >
+** parameter adjustments:
+  * MUSE epoch_size 100000/500000 instead of default 1000000
+  * MUSE emb_dim adapted to embeddings used
 ** python3 unsupervised.py --src_lang de --tgt_lang en --src_emb crosslingual_EN-DE_german_twitter_100d_weighted.txt.w2v --tgt_emb trained_en_embs.txt --n_refinement 5
 ** python3 supervised.py --src_lang de --tgt_lang en --src_emb crosslingual_EN-DE_german_twitter_100d_weighted.txt.w2v --tgt_emb trained_en_embs.txt --n_refinement 5 --dico_train default
-** resulting En space much smaller than De, but presumably irrelevant because all vocabs found in train/dev/test sets are included
--------------------------------------------------------------------------------------------------------------------------------------------
-< Z5: steps >
-e-4 LR
-twnet_Z5 saves updated EnBWE with corresponding words
-53626 vocabs found in En data
-412776 De embs to map
-24154 overlapping vocabs
-new joint BWE created with merger
-442248 embs in new joint BWE
-joint BWE fed into twnet
 
-setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
--------------------------------------------------------------------------------------------------------------------------------------------
-a) < epoch_size=100000, unsupervised, merger=averaged >
-Z5      30      128     0.2     2*64      -         64    2     61.20         50.88         60.12         49.14
--------------------------------------------------------------------------------------------------------------------------------------------
-b) < epoch_size=100000, unsupervised, merger=keep_en >
-Z5      30      128     0.2     2*64      -         64    3     61.73         54.02         60.15         50.00
--------------------------------------------------------------------------------------------------------------------------------------------
-c) < epoch_size=500000, unsupervised, merger=averaged >
-Z5      30      128     0.2     2*64      -         64    2     61.29         51.88         60.07         49.89
--------------------------------------------------------------------------------------------------------------------------------------------
-d) < epoch_size=500000, unsupervised, merger=keep_en >
-Z5      30      128     0.2     2*64      -         64    3     61.96         53.55         60.48         50.02
--------------------------------------------------------------------------------------------------------------------------------------------
-e) < supervised, merger=keep_en >
-Z5      30      128     0.2     2*64      -         64    2     62.08         55.11         60.83         51.11
--------------------------------------------------------------------------------------------------------------------------------------------
-** averaged merging decreased performance of De
+< VecMap >
+
+< comments >
 ** Z5 shows improvement upon ZM (w/o De embeddings), but underperforms other settings (Z2-4) except in the supervised setting
 ** it can be thus inferred that Z5 shows no significant purpose, but lowers En performance by averaging embs
--------------------------------------------------------------------------------------------------------------------------------------------
-< Z5 with GloVe Twitter: unsupervised >
-setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-GloVe Z5  30    128     0.2     2*64      -         64    3     63.32         56.80         62.01         32.86         De neu-skewed
-GloVe ZM  30    128     0.2     2*64      -         64    5     62.66         58.43         61.53         38.50         De neu-skewed
--------------------------------------------------------------------------------------------------------------------------------------------
-< Z5 with GloVe Twitter: supervised >
-setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-GloVe Z5  30    128     0.2     2*64      -         64    2     63.10         57.21         61.63         37.98         De neu-skewed
-GloVe ZM  30    128     0.2     2*64      -         64    5     62.66         58.43         61.53         38.50         De neu-skewed
 
-** GloVe Z5 shows no significant improvement
-** GloVe Z5 does not outperform GloVe ZM (w/o De embeddings)
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+MUSE
+-------------------------------------------------------------------------------------------------------------------------------------------
+
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 VECMAP - INTRODUCTION
@@ -130,49 +109,58 @@ Procrustes CSLS              72.4                  |  34.73
 CLWordsim                    0.72                  |  0.64
 
 
-
-
 -------------------------------------------------------------------------------------------------------------------------------------------
 OWN EVALUATION: cossim_crosslingual
 -------------------------------------------------------------------------------------------------------------------------------------------
-* en vecs are trained with LR e-4
-* en-de & de-en dict available from MUSE (101931 en-de pairs & 101997 de-en pairs) used for evaluation
-* approach see cossim_crosslingual.py
-* avg cossim once en-de + once de-en & take average of two
-* python3 cossim_crosslingual.py en_embs.txt de_embs.txt -d MUSE_dictionaries/en-de.txt
+** en-de & de-en dict available from MUSE (101931 en-de pairs & 101997 de-en pairs) used for evaluation
+** take average of en-de cossim & de-en cossim (cossim_crosslingual.py)
+** python3 cossim_crosslingual.py en_embs.txt de_embs.txt -d MUSE_dictionaries/en-de.txt
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+RESULTS
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
 
                                             en-de_avg_cossim  de-en_avg_cossim  avg_cossim  merger  setting EnMicro DeMicro EnMacro DeMacro
-Collados, no mapping                        0.6471            0.6397            0.6434      -       Z2      63.44   56.97   61.50   50.85
-                                                                                            -       C2      61.52   60.03   58.94   51.87
-
+Collados, no tuning                         0.7175            0.7124            0.7150      -       Z2      63.44   56.97   61.50   50.85
+Collados, tuned & no mapping                0.6471            0.6397            0.6434      -       C2      61.52   60.03   58.94   51.87
+-------------------------------------------------------------------------------------------------------------------------------------------
 Collados, vecmap supervised                 0.6401            0.6425            0.6412      avg     Z2      60.58   54.04   59.28   48.72
 dict=en-de.train.txt                                                                        keep    Z2      61.40   56.11   60.09   45.39
-
+-------------------------------------------------------------------------------------------------------------------------------------------
 Collados, vecmap supervised                 0.6603            0.6578            0.6591      avg     Z2      61.41   55.27   59.43   47.82
 dict=MUSE de-en.txt                                                                         keep    Z2      60.16   56.30   56.75   48.75
-
+-------------------------------------------------------------------------------------------------------------------------------------------
 Collados, vecmap semi-supervised            0.6270            0.6246            0.6258      avg     Z2      60.84   52.07   58.28   47.77
 dict=MUSE de-en.txt                                                                         keep    Z2      61.48   46.93   60.19   45.46
-
+-------------------------------------------------------------------------------------------------------------------------------------------
 Collados, vecmap identical                  0.6269            0.6246            0.6258      avg     Z2      61.23   51.94   59.03   48.19
-                                                                                            keep    Z2      61.51   57.99   59.01   50.28
-
+                                                                                            keep    Z2      61.71   58.19   59.14   50.19
+                                         -- add. test because De close to baseline Z2 --    keep    C2      60.25   59.01   58.65   51.91
+-------------------------------------------------------------------------------------------------------------------------------------------
 Collados, vecmap unsupervised               0.1158            0.1153            0.1156      avg     Z2      59.82   44.12   57.43   38.53
                                                                                             keep    Z2      60.86   42.37   60.08   35.59
-
+-------------------------------------------------------------------------------------------------------------------------------------------
 Collados, MUSE supervised                   0.6144            0.6128            0.6136      avg     Z2      61.56   52.38   60.07   49.91
 dict=default                                                                                keep    Z2      61.52   54.90   59.21   51.20
-
+-------------------------------------------------------------------------------------------------------------------------------------------
 Collados, MUSE unsupervised                 0.6179            0.6148            0.6164      avg     Z2      61.39   51.96   59.86   49.61
-                                                                                            keep    Z2      61.72   53.85   59.81   50.65
-
-GloVe Twitter, no mapping                   -0.003            -0.004            -0.004      -       -       Z2 not possible with these embs
-
+epoch_size=100000                                                                           keep    Z2      61.72   53.85   59.81   50.65
+-------------------------------------------------------------------------------------------------------------------------------------------
+Collados, MUSE unsupervised                 0.6220            0.6185            0.6203      avg     Z2      61.29   51.88   60.07   49.89
+epoch_size=500000                                                                           keep    Z2      61.96   53.55   60.48   50.02
+-------------------------------------------------------------------------------------------------------------------------------------------
+GloVe Twitter, no mapping                   -0.003            -0.004            -0.004      -       ZM      63.02   57.90   61.01   38.53
+-------------------------------------------------------------------------------------------------------------------------------------------
 GloVe Twitter, MUSE supervised              0.4084            0.4286            0.4185      avg     Z2      63.30   58.87   61.86   42.70
-                                                                                            keep    Z2      60.51   56.50   58.59   52.07
-
+dict=default                                                                                keep    Z2      60.84   56.84   58.85   52.11
+                                         -- add. test because De close to baseline Z2 --    keep    C2      57.62   57.80   55.06   49.84
+-------------------------------------------------------------------------------------------------------------------------------------------
 GloVe Twitter, MUSE unsupervised            0.0175            0.0215            0.0195      avg     Z2      62.87   56.80   61.58   32.99
-                                                                                            keep    Z2      46.91   52.75   37.77   34.11
+epoch_size=100000                                                                           keep    Z2      46.91   52.75   37.77   34.11
+-------------------------------------------------------------------------------------------------------------------------------------------
+
 
 
 

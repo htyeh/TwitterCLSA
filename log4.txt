@@ -1,0 +1,10 @@
+-------------------------------------------------------------------------------------------------------------------------------------------
+MULTILINGUAL EXPERIMENTS
+-------------------------------------------------------------------------------------------------------------------------------------------
+< Tweet download >
+** Hu: first 2000 twids from CLARIN-Hungarian
+** Sk: first 2000 twids from CLARIN-Slovak
+** Sv: first 2000 twids from CLARIN-Swedish
+<HU> CLARIN 1500 (228 neg/413 neu/666 pos)
+<SK> CLARIN 1500 (300 neg/432 neu/759 pos)
+<SV> CLARIN 1500 (340 neg/620 neu/288 pos)

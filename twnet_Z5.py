@@ -26,11 +26,6 @@ MAXLEN = 30    # max tweet word count
 
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(train_texts + dev_texts + test_texts)
-# with open('tokenizer.pickle', 'wb') as tokenizer_output:
-    # pickle.dump(tokenizer, tokenizer_output, protocol=pickle.HIGHEST_PROTOCOL)
-# print('Tokenizer object exported')
-# with open('tokenizer.pickle', 'rb') as tokenizer_input:
-    # tokenizer = pickle.load(tokenizer_input)
 
 vocab_size = len(tokenizer.word_index) + 1  # +UNK
 print('unique tokens in tokenizer: ' + str(vocab_size - 1))
@@ -67,8 +62,8 @@ y_test = test_labels
 
 EMBEDDING_DIM = 100
 
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
-embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE_Z5.txt')
+embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
+# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE_Z5.txt')
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/crosslingual_EN-DE_english_twitter_100d_weighted.txt.w2v')
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.100d.txt', dim=EMBEDDING_DIM)
 
@@ -103,16 +98,6 @@ print('sample en pred:', predicted_en[:30])
 print('micro en:', f1_score(gold_en, predicted_en, average='micro'))
 print('macro en:', f1_score(gold_en, predicted_en, average='macro'))
 
-# utils.test_evaluation(gold, predicted)
-# utils.test_evaluation(gold2, predicted2)
-
-# toy tests
-# toy_sents = tokenizer.texts_to_sequences(['the cat sat on the mat', 'what a great movie', 'better not again', 'terrible, worst ever', 'best film ever', 'today is Tuesday'])
-# toy_data = pad_sequences(toy_sents, maxlen=MAXLEN)
-# toy_gold = [1, 2, 0, 0, 2, 1]
-# prediction = model.predict(toy_data)
-# print(toy_gold)
-# print(prediction.argmax(axis=1))
 
 # plot results
 # utils.plot(history)
