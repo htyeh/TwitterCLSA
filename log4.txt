@@ -8,3 +8,63 @@ MULTILINGUAL EXPERIMENTS
 <HU> CLARIN 1500 (228 neg/413 neu/666 pos)
 <SK> CLARIN 1500 (300 neg/432 neu/759 pos)
 <SV> CLARIN 1500 (340 neg/620 neu/288 pos)
+
+< multilingual embeddings >
+** use MUSE aligned embeddings for all languages studied
+** MUSE format: 200000 vocab * 300 dim, trained on Wikipedia
+** use avg merging
+** generate following embedding(s):
+<EN-DE-HU-SK-SV-merged>
+
+< experiment description >
+** model1: En train/dev
+** model2: multiling train; De dev; record zero-shot scores
+** model3: De train/dev; record classical scores
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+EXPERIMENT PROPOSALS
+-------------------------------------------------------------------------------------------------------------------------------------------
+< add-1 lang zero-shot >
+** training step: 34701 En train + En dev; ~1500 {Hu, Sk, Sv} train, keep De dev
+
+< add-1 lang classical >
+** training step: 34701 En train + En dev; ~1500 {Hu, Sk, Sv} train, keep De dev
+** tuning step: ~5000 De train + De dev
+
+< add-all zero-shot >
+** training step: 34701 En train + En dev; ~1500 Hu + ~1500 Sk + ~1500 Sv train, keep De dev
+
+< add-all classical >
+** training step: 34701 En train + En dev; ~1500 Hu + ~1500 Sk + ~1500 Sv train, keep De dev
+** tuning step: ~5000 De train + De dev
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+BASELINE (with EN-DE MUSE)
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      8       60.88         59.70         58.48         45.76
+C2      3       56.26    	    59.87    	    55.23    	    52.19
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+BASELINE (with EN-DE-HU-SK-SV MUSE)
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      9       58.80    	    51.99    	    56.74    	    46.45
+C2      3       55.03    	    58.39    	    50.65    	    49.21
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+ADD-ONE, HU
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+<HU> CLARIN 1500 (228 neg/413 neu/666 pos)
+
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      11,1    38.37    	    36.76    	    34.68    	    36.32
+C2      2       54.52    	    58.34    	    50.55     	  47.69

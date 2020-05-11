@@ -3,9 +3,8 @@ EMBEDDINGS/
 *.h5
 test.py
 beta*.py
-TWEETS/CLEAN/sent140/
-TWEETS/FULL/sent140/
-TWEETS/RAW/sent140/
+TWEETS/CLEAN_SENT140
+TWEETS/RAW_SENT140
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
