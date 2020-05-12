@@ -110,9 +110,11 @@ y_val = dev_labels
 x_test = test_data
 y_test = test_labels
 
-# multiling setting = add-one hu
-x_train_multiling = hu_data
-y_train_multiling = hu_labels
+# multiling setting = add-all
+# x_train_multiling = sv_data
+x_train_multiling = np.concatenate((hu_data, sk_data, sv_data))
+# y_train_multiling = sv_labels
+y_train_multiling = np.concatenate((hu_labels, sk_labels, sv_labels))
 x_val_multiling = de_dev_data
 y_val_multiling = de_dev_labels
 x_test_multiling = de_test_data
