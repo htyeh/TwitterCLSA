@@ -182,23 +182,43 @@ OVERVIEW OF ALL SCORES
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
 <DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
 setting MAXLEN  bilstm  dropout dense     dropouts  batch epoch F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
-< BASIC SETTINGS >
+< ZERO-SHOT >
 Z1      30      128     0.2     2*64      -         64    1     60.99         54.78         59.21         32.43
 ZM      30      128     0.2     2*64      -         64    10    63.19         54.08         61.53         41.57
 Z2      30      128     0.2     2*64      -         64    10    63.44         56.97         61.50         50.85
 Z3      30      128     0.2     2*64      -         64    1     62.03         55.38         60.71         49.62
 Z4      30      128     0.2     2*64      -         64    1     62.86         56.43         60.74         50.37
 Z5      30      128     0.2     2*64      -         64    2     62.08         55.11         60.83         51.11
+< CLASSICAL WITH 5287 DE >
 C1      30      128     0.2     2*64      -         64    -     60.97         55.79         58.01         45.13
 C2      30      128     0.2     2*64      -         64    -     61.52         60.03         58.94         51.87
 C3      30      128     0.2     2*64      -         64    -     59.88         57.71         58.30         48.23
 C4      30      128     0.2     2*64      -         64    -     61.82         57.45         60.88         50.11
-CX
-< EMB-ENHANCER SETTINGS >
+CX      30      128     0.2     2*64      -         64    -     63.05         59.08         60.41         50.99
+< CLASSICAL WITH 264 DE >
+C1      30      128     0.2     2*64      -         64          60.26         55.48         56.98         31.96
+C2      30      128     0.2     2*64      -         64          62.21         59.26         58.21         48.32
+C3      30      128     0.2     2*64      -         64          61.84         58.67         59.06         46.96
+C4      30      128     0.2     2*64      -         64          62.85         57.23         61.01         50.42
+< EMB-ENHANCER ZERO-SHOT >                          * (LR) setting with best En scores is recorded
 Z1      30      128     0.2     2*64      -         64    -     60.14         53.06         59.08         34.01
 Z3      30      128     0.2     2*64      -         64    -     62.12         48.01         61.04         46.13
 Z4      30      128     0.2     2*64      -         64    -     61.48         51.74         60.34         49.87
-< ARCH-ENHANCER SETTINGS >
-CX      30      128     0.2     2*64      -         64    -     63.09         59.46         61.42         52.25
+< EMB-ENHANCER CLASSICAL WITH 5287 DE >             * (LR) setting with best De scores is recorded
+C1      30      128     0.2     2*64      -         64    -     57.89         51.80         56.47         39.43
+C3      30      128     0.2     2*64      -         64    -     61.22         58.32         58.77         49.79
+C4      30      128     0.2     2*64      -         64    -     61.51         57.81         60.06         51.04
+< EMB-ENHANCER CLASSICAL WITH 264 DE >              * one (LR) setting tested for efficiency
+C1      30      128     0.2     2*64      -         64    -     57.82         47.36         57.33         38.04
+C3      30      128     0.2     2*64      -         64    -     61.10         53.68         60.23         49.92
+C4      30      128     0.2     2*64      -         64    -     59.74         53.60         59.20         50.18
+< ARCH-ENHANCER ZERO-SHOT >                         * one (LR) setting tested
 Z3      30      128     0.2     2*64      -         64    -     64.48         56.10         63.11         50.42
 Z4      30      128     0.2     2*64      -         64    -     64.05         57.41         62.72         51.02
+< ARCH-ENHANCER CLASSICAL WITH 5287 DE >            * (LR) setting with best De scores is recorded
+C3      30      128     0.2     2*64      -         64    -     62.29         60.07         61.09         52.83   > baseline (C2 60.03/51.87)
+C4      30      128     0.2     2*64      -         64    -     62.88         59.97         61.32         51.96   ? > baseline (C2 60.03/51.87)
+CX      30      128     0.2     2*64      -         64    -     63.09         59.46         61.42         52.25
+< ARCH-ENHANCER CLASSICAL WITH 264 DE >             * one (LR) setting tested for efficiency
+C3      30      128     0.2     2*64      -         64    -     63.42         59.64         60.68         49.22   about SOTA w/ 10572 De
+C4      30      128     0.2     2*64      -         64    -     62.60         59.76         59.86         50.82   > baseline (C2 59.26/48.32)

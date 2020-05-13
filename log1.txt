@@ -243,15 +243,6 @@ En: only vocab seen in training updated (generalization problem)
 De embs not updated in zero-shot
 1 reason for bad performance with updated embs: unable to generalize when only training embs updated
   - fit Tokenizer on train vocab only: train these into sentiment vectors
-merged BWE settings: architecture only trained for 1 epoch
-  - try using the updated BWE with an architecture trained on both BWE fixed
-generally involving trainable embeddings: architecture stops being trained after 1 epoch
-  - train with BWE fixed -> train with trainable for 1 epoch
-
-
-
-
-
 
 
 
