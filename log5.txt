@@ -1,0 +1,171 @@
+-------------------------------------------------------------------------------------------------------------------------------------------
+MULTILINGUAL EXPERIMENTS - MULTILINGUAL TRAINING
+-------------------------------------------------------------------------------------------------------------------------------------------
+< Tweet download >
+** Hu: first 2000 twids from CLARIN-Hungarian
+** Sk: first 2000 twids from CLARIN-Slovak
+** Sv: first 2000 twids from CLARIN-Swedish
+<HU> CLARIN 1500 (228 neg/413 neu/666 pos)
+<SK> CLARIN 1500 (300 neg/432 neu/759 pos)
+<SV> CLARIN 1500 (340 neg/620 neu/288 pos)
+
+< multilingual embeddings >
+** use MUSE aligned embeddings for all languages studied
+** MUSE format: 200000 vocab * 300 dim, trained on Wikipedia
+** use avg merging
+** generate following embedding(s):
+<EN-DE-HU-SK-SV-merged>
+
+< multilingual training data >
+** concatenate En-train and multiling into one train-array
+
+< experiment description >
+** model1: En + multiling train; En dev; record zero-shot scores
+** model2: De train/dev; record classical scores
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+BASELINE (with EN-DE-HU-SK-SV MUSE), (X)NORMAL/( )SMALL-DATASET
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      9       58.80    	    51.99    	    56.74    	    46.45
+C2      3       55.03    	    58.39    	    50.65    	    49.21
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+ADD-ONE, HU, (X)NORMAL/( )SMALL-DATASET
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+<HU> CLARIN 1500 (228 neg/413 neu/666 pos)
+
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      10      58.87    	    45.32    	    56.43    	    44.03
+C2      3       56.14    	    58.51    	    51.40     	  47.51
+
+< compare to baseline >
+setting         F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2              0             -6.7          -0.3          -2.4
+C2              +1.1          +0.1          +0.8          -1.7
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+ADD-ONE, SK, (X)NORMAL/( )SMALL-DATASET
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+<SK> CLARIN 1500 (300 neg/432 neu/759 pos)
+
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      9       58.74    	    44.30    	    56.44    	    43.60
+C2      3       55.82    	    58.16    	    51.99    	    48.40
+
+< compare to baseline >
+setting         F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2              0             -7.7          -0.3          -2.9
+C2              +0.8          -0.2          +1.3          -0.8
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+ADD-ONE, SV, (X)NORMAL/( )SMALL-DATASET
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+<SV> CLARIN 1500 (340 neg/620 neu/288 pos)
+
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      11      58.88    	    49.44    	    56.64    	    46.39
+C2      2       56.02    	    58.54    	    52.21    	    47.86
+
+< compare to baseline >
+setting         F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2              +0.1          -2.6          -0.1          -0.1
+C2              +1            +0.2          +1.6          -1.4
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+ADD-ALL, HU SK SV, (X)NORMAL/( )SMALL-DATASET
+-------------------------------------------------------------------------------------------------------------------------------------------
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      10      58.80     	  46.34    	    56.99    	    45.02
+C2      2       55.87    	    58.04    	    52.56    	    48.07
+
+< compare to baseline >
+setting         F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2              0             -5.7          +0.3          -1.4
+C2              +0.8          -0.4          +1.9          -1.1
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+BASELINE (with EN-DE-HU-SK-SV MUSE), ( )NORMAL/(X)SMALL-DATASET
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 0.5% (train 48/148/68; dev 2078/6326/2923; test 2078/6326/2923)
+
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      10      58.99         52.41         56.49         46.21
+C2      3       54.76         57.09         47.37         40.98
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+ADD-ONE, HU, ( )NORMAL/(X)SMALL-DATASET
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 0.5% (train 48/148/68; dev 2078/6326/2923; test 2078/6326/2923)
+<HU> CLARIN 300 (46 neg/83 neu/133 pos)
+
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      10      58.72    	    47.74    	    56.57    	    45.49
+C2      3       55.83    	    56.95    	    47.03    	    41.24
+
+< compare to baseline >
+setting         F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2              -0.3          -4.7          +0.1          -0.7
+C2              +1.1          -0.1          -0.3          +0.3
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+ADD-ONE, SK, ( )NORMAL/(X)SMALL-DATASET
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 0.5% (train 48/148/68; dev 2078/6326/2923; test 2078/6326/2923)
+<SK> CLARIN 300 (60 neg/86 neu/152 pos)
+
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      11      58.96    	    47.74    	    56.66    	    45.68
+C2      3       56.39    	    56.96    	    47.59    	    40.55
+
+< compare to baseline >
+setting         F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2              0             -4.7          +0.2          -0.5
+C2              +1.6          -0.1          +0.2          -0.4
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+ADD-ONE, SV, ( )NORMAL/(X)SMALL-DATASET
+-------------------------------------------------------------------------------------------------------------------------------------------
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 0.5% (train 48/148/68; dev 2078/6326/2923; test 2078/6326/2923)
+<SV> CLARIN 300 (68 neg/124 neu/58 pos)
+
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      9       59.00      	  50.36    	    56.75    	    46.20
+C2      3       55.88    	    57.23    	    47.15    	    41.53
+
+< compare to baseline >
+setting         F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2              0             -2.1          +0.3          0
+C2              +1.1          +0.1          -0.2          +0.6
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+ADD-ALL, HU SK SV, ()NORMAL/(X)SMALL-DATASET
+-------------------------------------------------------------------------------------------------------------------------------------------
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      10      58.78    	    47.75    	    56.56    	    45.37
+C2      3       56.41    	    57.30     	  49.14    	    41.75
+
+< compare to baseline >
+setting         F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2              -0.2          -4.7          +0.1          -0.8
+C2              +1.7          +0.2          +1.8          +0.8
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+COMMENTS
+-------------------------------------------------------------------------------------------------------------------------------------------
+** with larger datasets (1500): zero-shot generally worse for De, with the decrease smaller when using Sv; slightly worse De macro in classical
+** with small datasets (300): worse De micro, still smaller decrease with Sv; no significant observation on classical, adding Sv/All slightly better
