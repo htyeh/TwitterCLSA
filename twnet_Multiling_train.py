@@ -15,7 +15,7 @@ from keras import optimizers
 import keras.backend as K
 
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
-dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
+dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
 de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small0.5/train'
 de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
@@ -130,7 +130,7 @@ global_en_mic_tune = 0
 global_de_mic_tune = 0
 global_en_mac_tune = 0
 global_de_mac_tune = 0
-num_iterations = 10
+num_iterations = 5
 
 for i in range(num_iterations):
     print('training iteration:', i + 1)

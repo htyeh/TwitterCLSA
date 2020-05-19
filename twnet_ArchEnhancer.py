@@ -17,9 +17,9 @@ import keras.backend as K
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
-de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small0.5/train'
-de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
-de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
+de_train_dir = './TWEETS/CLEAN/ES_CLARIN_300/train'
+de_dev_dir = './TWEETS/CLEAN/ES_CLARIN_300/dev'
+de_test_dir = './TWEETS/CLEAN/ES_CLARIN_300/test'
 train_texts, train_labels = utils.load_data(train_dir)
 dev_texts, dev_labels = utils.load_data(dev_dir)
 test_texts, test_labels = utils.load_data(test_dir)
@@ -32,14 +32,6 @@ MAXLEN = 30    # max tweet word count
 
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(train_texts + dev_texts + test_texts + de_train_texts + de_dev_texts + de_test_texts)
-# with open('tokenizer.pickle', 'wb') as tokenizer_output:
-    # pickle.dump(tokenizer, tokenizer_output, protocol=pickle.HIGHEST_PROTOCOL)
-# print('Tokenizer object exported')
-# with open('tokenizer.pickle', 'rb') as tokenizer_input:
-    # tokenizer = pickle.load(tokenizer_input)
-# tokenizer_json = tokenizer.to_json()
-# with open('tokenizer.json', 'w') as dumpfile:
-#     json.dump(tokenizer_json, dumpfile)
 
 vocab_size = len(tokenizer.word_index) + 1  # +UNK
 print('unique tokens in tokenizer: ' + str(vocab_size - 1))
@@ -104,7 +96,7 @@ y_test_de = de_test_labels
 
 EMBEDDING_DIM = 100
 
-embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
+embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_ES.txt.w2v')
 
 embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
 
@@ -116,7 +108,7 @@ global_en_mic_tune = 0
 global_de_mic_tune = 0
 global_en_mac_tune = 0
 global_de_mac_tune = 0
-num_iterations = 7
+num_iterations = 8
 
 for i in range(num_iterations):
     print('training iteration:', i + 1)

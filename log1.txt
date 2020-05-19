@@ -22,7 +22,7 @@ SB-10K: link: https://www.spinningbytes.com/resources/germansentiment/
 >Train/Dev/Test split: 70/15/15
 
 >Tweet cleansing
-1) removed 'Not Available' ones
+1) removed repeating and 'Not Available' ones
 2) contractions/elongated words are kept (own embeddings)
 3) hashtags kept (might contain sentiment info)
 4) to lowercase
@@ -66,7 +66,7 @@ COMPLETE EXPERIMENT DESCRIPTION
 * only En part of [EnDe BWE] get updates (no training on De vocab)
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-COMPLETE EXPERIMENT SETTINGS
+COMPLETE EXPERIMENT SETTING INDEX
 -------------------------------------------------------------------------------------------------------------------------------------------
 (M-monolingual, C-classical, Z-zero-shot)
 M1: EmbLayer

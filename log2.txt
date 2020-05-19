@@ -389,6 +389,10 @@ Enh.C4  e-2       e-4
 Enh.C4  e-3       e-4           2,3                                 62.60     59.76     59.86     50.82       > baseline
 Enh.C4  e-4       e-4
 
+< setting CX >
+** En-step as in C2 (trained with fixed BWE)
+** De-step as in C3 (tune with unfrozen BWE)
+setting LR(arch)  LR(emb)       epo(arch,emb)                       En-micro  De-micro  En-macro  De-macro
 
 
 
