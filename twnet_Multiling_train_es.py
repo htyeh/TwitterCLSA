@@ -26,18 +26,16 @@ test_texts, test_labels = utils.load_data(test_dir)
 de_train_texts, de_train_labels = utils.load_data(de_train_dir)
 de_dev_texts, de_dev_labels = utils.load_data(de_dev_dir)
 de_test_texts, de_test_labels = utils.load_data(de_test_dir)
-hu_dir = './TWEETS/CLEAN/HU_CLARIN_300'
-sk_dir = './TWEETS/CLEAN/SK_CLARIN_300'
-sv_dir = './TWEETS/CLEAN/SV_CLARIN_300'
-hu_texts, hu_labels = utils.load_data(hu_dir)
-sk_texts, sk_labels = utils.load_data(sk_dir)
-sv_texts, sv_labels = utils.load_data(sv_dir)
+it_dir = './TWEETS/CLEAN/IT_SENTIPOLC_300'
+pt_dir = './TWEETS/CLEAN/PT_CLARIN_300'
+it_texts, it_labels = utils.load_data(it_dir)
+pt_texts, pt_labels = utils.load_data(pt_dir)
 
 # MAX_WORDS = 30000
 MAXLEN = 30    # max tweet word count
 
 tokenizer = Tokenizer()
-tokenizer.fit_on_texts(train_texts + dev_texts + test_texts + de_train_texts + de_dev_texts + de_test_texts + hu_texts + sk_texts + sv_texts)
+tokenizer.fit_on_texts(train_texts + dev_texts + test_texts + de_train_texts + de_dev_texts + de_test_texts + it_texts + pt_texts)
 
 vocab_size = len(tokenizer.word_index) + 1  # +UNK
 print('unique tokens in tokenizer: ' + str(vocab_size - 1))
@@ -49,9 +47,8 @@ test_sequences = tokenizer.texts_to_sequences(test_texts)
 de_train_sequences = tokenizer.texts_to_sequences(de_train_texts)
 de_dev_sequences = tokenizer.texts_to_sequences(de_dev_texts)
 de_test_sequences = tokenizer.texts_to_sequences(de_test_texts)
-hu_sequences = tokenizer.texts_to_sequences(hu_texts)
-sk_sequences = tokenizer.texts_to_sequences(sk_texts)
-sv_sequences = tokenizer.texts_to_sequences(sv_texts)
+it_sequences = tokenizer.texts_to_sequences(it_texts)
+pt_sequences = tokenizer.texts_to_sequences(pt_texts)
 
 print('padding to ' + str(MAXLEN) + ' words each...')
 train_data = pad_sequences(train_sequences, maxlen=MAXLEN)
@@ -60,9 +57,8 @@ test_data = pad_sequences(test_sequences, maxlen=MAXLEN)
 de_train_data = pad_sequences(de_train_sequences, maxlen=MAXLEN)
 de_dev_data = pad_sequences(de_dev_sequences, maxlen=MAXLEN)
 de_test_data = pad_sequences(de_test_sequences, maxlen=MAXLEN)
-hu_data = pad_sequences(hu_sequences, maxlen=MAXLEN)
-sk_data = pad_sequences(sk_sequences, maxlen=MAXLEN)
-sv_data = pad_sequences(sv_sequences, maxlen=MAXLEN)
+it_data = pad_sequences(it_sequences, maxlen=MAXLEN)
+pt_data = pad_sequences(pt_sequences, maxlen=MAXLEN)
 
 train_labels = np.asarray(train_labels)
 dev_labels = np.asarray(dev_labels)
@@ -70,9 +66,8 @@ test_labels = np.asarray(test_labels)
 de_train_labels = np.asarray(de_train_labels)
 de_dev_labels = np.asarray(de_dev_labels)
 de_test_labels = np.asarray(de_test_labels)
-hu_labels = np.asarray(hu_labels)
-sk_labels = np.asarray(sk_labels)
-sv_labels = np.asarray(sv_labels)
+it_labels = np.asarray(it_labels)
+pt_labels = np.asarray(pt_labels)
 
 print('en train data tensor shape = ', train_data.shape)
 print('en train label tensor shape = ', train_labels.shape)
@@ -86,12 +81,10 @@ print('de dev data tensor shape = ', de_dev_data.shape)
 print('de dev label tensor shape = ', de_dev_labels.shape)
 print('de test data tensor shape = ', de_test_data.shape)
 print('de test label tensor shape = ', de_test_labels.shape)
-print('hu tuning data tensor shape = ', hu_data.shape)
-print('hu tuning label tensor shape = ', hu_labels.shape)
-print('sk tuning data tensor shape = ', sk_data.shape)
-print('sk tuning label tensor shape = ', sk_labels.shape)
-print('sv tuning data tensor shape = ', sv_data.shape)
-print('sv tuning label tensor shape = ', sv_labels.shape)
+print('it tuning data tensor shape = ', it_data.shape)
+print('it tuning label tensor shape = ', it_labels.shape)
+print('pt tuning data tensor shape = ', pt_data.shape)
+print('pt tuning label tensor shape = ', pt_labels.shape)
 
 train_data, train_labels = utils.shuffle(train_data, train_labels)
 dev_data, dev_labels = utils.shuffle(dev_data, dev_labels)
@@ -99,12 +92,11 @@ test_data, test_labels = utils.shuffle(test_data, test_labels)
 de_train_data, de_train_labels = utils.shuffle(de_train_data, de_train_labels)
 de_dev_data, de_dev_labels = utils.shuffle(de_dev_data, de_dev_labels)
 de_test_data, de_test_labels = utils.shuffle(de_test_data, de_test_labels)
-hu_data, hu_labels = utils.shuffle(hu_data, hu_labels)
-sk_data, sk_labels = utils.shuffle(sk_data, sk_labels)
-sv_data, sv_labels = utils.shuffle(sv_data, sv_labels)
+it_data, it_labels = utils.shuffle(it_data, it_labels)
+pt_data, pt_labels = utils.shuffle(pt_data, pt_labels)
 
-x_train = np.concatenate((train_data, hu_data, sk_data, sv_data))
-y_train = np.concatenate((train_labels, hu_labels, sk_labels, sv_labels))
+x_train = np.concatenate((train_data, it_data, pt_data))
+y_train = np.concatenate((train_labels, it_labels, pt_labels))
 x_val = dev_data
 y_val = dev_labels
 x_test = test_data
@@ -119,7 +111,7 @@ y_test_de = de_test_labels
 
 EMBEDDING_DIM = 300
 
-embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE_HU_SK_SV.txt', dim=300)
+embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_ES_IT_PT.txt', dim=300)
 embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
 
 global_en_mic_train = 0
@@ -130,7 +122,7 @@ global_en_mic_tune = 0
 global_de_mic_tune = 0
 global_en_mac_tune = 0
 global_de_mac_tune = 0
-num_iterations = 5
+num_iterations = 10
 
 for i in range(num_iterations):
     print('training iteration:', i + 1)

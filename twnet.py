@@ -102,11 +102,12 @@ y_test_de = de_test_labels
 print(x_train[:3])
 print(x_test[:3])
 
-EMBEDDING_DIM = 100
+EMBEDDING_DIM = 300
 
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
-embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_ES.txt.w2v')
+# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_ES.txt.w2v')
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE_HU_SK_SV.txt', dim=300)
+embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_ES_IT_PT.txt', dim=300)
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.840B.300d.txt', dim=EMBEDDING_DIM)
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.100d.txt', dim=EMBEDDING_DIM)
 
@@ -120,7 +121,7 @@ global_en_mic_tune = 0
 global_de_mic_tune = 0
 global_en_mac_tune = 0
 global_de_mac_tune = 0
-num_iterations = 8
+num_iterations = 10
 
 for i in range(num_iterations):
     print('training iteration:', i + 1)
@@ -128,7 +129,7 @@ for i in range(num_iterations):
     # build model
     model = models.Sequential()
     # model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
-    model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=True, input_length=MAXLEN))
+    model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=False, input_length=MAXLEN))
     # model.add(layers.Conv1D(128, 3, padding='valid', activation='relu'))
     # model.add(layers.MaxPooling1D())
     # model.add(layers.Flatten())
