@@ -116,6 +116,24 @@ def test_evaluation(gold_en, predicted_en, gold_de, predicted_de):
     print('{0: <10}'.format(en_micro) + '\t' + '{0: <10}'.format(de_micro) + '\t' + '{0: <10}'.format(en_macro) + '\t' + '{0: <10}'.format(de_macro))
     return en_micro, de_micro, en_macro, de_macro
 
+# def multiling_evaluation(gold_en, predicted_en, gold_de, predicted_de):
+def multiling_evaluation(gold_list, pred_list):
+    # gold = y_test; predicted = model.predict(x_test)
+    # print('sample en gold:', gold_en[:30])
+    # print('sample en pred:', predicted_en[:30])
+    # print('sample de gold:', gold_de[:30])
+    # print('sample de pred:', predicted_de[:30])
+    micro_list = []
+    macro_list = []
+    for gold, pred in zip(gold_list, pred_list):
+        micro_score = round(f1_score(gold, pred, average='micro'), 4)
+        macro_score = round(f1_score(gold, pred, average='macro'), 4)
+        micro_list.append(micro_score)
+        macro_list.append(macro_score)
+    print('micro F1s', micro_list)
+    print('macro F1s', macro_list)
+    return micro_list, macro_list
+
 
 
 def list_layers(model):

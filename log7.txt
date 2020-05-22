@@ -1,0 +1,32 @@
+-------------------------------------------------------------------------------------------------------------------------------------------
+MULTILINGUAL FOR ALL LANGS (EN DE ES HU SK SV IT PT)
+-------------------------------------------------------------------------------------------------------------------------------------------
+< experiment setting >
+** in the base setting/zero-shot, the classifier is trained only on 34701 En
+** in each following setting, ~300 tweets from another language are added, until about 7*300 multilingual tweets are added (De, Es, Hu, Sk, Sv, It, Pt)
+** the goal is to find how increasing the number of training languages affect the performance for all of them
+** evaluation on ~2000 tweets for each language (multiplying original dataset size with a factor to preserve class distributions)
+  * multiplying factors: En*0.27, De*0.18, Es*0.18, Hu*0.047, Sk* 0.04, Sv*0.055, It*0.225, Pt*0.033
+** Banea et al. 2010 on the contrary average all combinations for a given # of languages
+
+< data >
+EN_DE_ES_HU_SK_SV_IT_PT MUSE multilingual embeddings
+<EN> CLARIN full (train 8696/16590/9415; dev 1863/3555/2019; test 503/960/545)
+<DE> CLARIN 0.5% (train 48/148/68; test 374/1139/526)
+<ES> CLARIN 300 (train 33/119/138; test 232/834/967)
+<HU> CLARIN 300 (train 46/83/133; test 267/692/1037)
+<SK> CLARIN 300 (train 60/86/152; test 506/428/1072)
+<SV> CLARIN 300 (train 68/124/58; test 824/643/543)
+<IT> SENTIPOLC 300 (train 100/100/100; test 733/834/432)
+<PT> CLARIN 300 (train 100/100/100; test 767/692/525)
+
+< results >
+setting epoch mic-En  mac-En  mic-De  mac-De  mic-Es  mac-Es  mic-Hu  mac-Hu  mic-Sk  mac-Sk  mic-Sv  mac-Sv  mic-It  mac-It  mic-Pt  mac-Pt
+En + 0  9     60.16   57.36   49.26   40.16   43.45   31.41   44.10   40.00   28.23   25.11   39.26   31.63   46.86   34.88   38.80   31.00
+En + 1  10    60.26   57.71   52.91   40.08   43.37   31.82   44.14   40.20   28.31   25.22   39.63   32.49   47.42   35.73   38.76   31.37
+En + 2  10    60.17   57.53   53.20   40.84   47.04   38.68   46.36   42.57   31.63   29.82   40.94   35.90   48.21   40.98   39.29   35.00
+En + 3  10    60.24   57.78   51.72   41.13   48.08   38.74   55.51   50.43   40.18   37.66   41.14   38.66   45.98   41.13   37.10   34.86
+En + 4  10    60.83   58.37   53.47   41.41   48.03   39.35   56.75   51.54   51.22   48.08   42.40 	41.76   44.73   42.43   35.58   34.26
+En + 5  10    60.67   57.63   53.40   41.62   47.81   38.30   57.14   51.57   51.61   48.61   44.16   42.82   45.24   42.89   35.77   34.31
+En + 6  11    60.23   57.79   52.93   42.68   45.82   37.66   56.18   51.71   52.15   49.94   46.03   44.95   47.10   46.95   36.91   36.50
+En + 7  9     60.20   57.48   52.47   42.85   46.24   38.38   55.74   51.81   52.09   50.30   45.69   44.33   47.10  	46.97   39.22   38.78
