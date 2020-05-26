@@ -17,18 +17,18 @@ import keras.backend as K
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
-de_train_dir = './TWEETS/CLEAN/ES_CLARIN_300/train'
-de_dev_dir = './TWEETS/CLEAN/ES_CLARIN_300/dev'
-de_test_dir = './TWEETS/CLEAN/ES_CLARIN_300/test'
+de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small10/train'
+de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
+de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
 train_texts, train_labels = utils.load_data(train_dir)
 dev_texts, dev_labels = utils.load_data(dev_dir)
 test_texts, test_labels = utils.load_data(test_dir)
 de_train_texts, de_train_labels = utils.load_data(de_train_dir)
 de_dev_texts, de_dev_labels = utils.load_data(de_dev_dir)
 de_test_texts, de_test_labels = utils.load_data(de_test_dir)
-hu_dir = './TWEETS/CLEAN/HU_CLARIN_300'
-sk_dir = './TWEETS/CLEAN/SK_CLARIN_300'
-sv_dir = './TWEETS/CLEAN/SV_CLARIN_300'
+hu_dir = './TWEETS/CLEAN/HU_CLARIN_1500'
+sk_dir = './TWEETS/CLEAN/SK_CLARIN_1500'
+sv_dir = './TWEETS/CLEAN/SV_CLARIN_1500'
 hu_texts, hu_labels = utils.load_data(hu_dir)
 sk_texts, sk_labels = utils.load_data(sk_dir)
 sv_texts, sv_labels = utils.load_data(sv_dir)
@@ -103,7 +103,9 @@ hu_data, hu_labels = utils.shuffle(hu_data, hu_labels)
 sk_data, sk_labels = utils.shuffle(sk_data, sk_labels)
 sv_data, sv_labels = utils.shuffle(sv_data, sv_labels)
 
+# x_train = np.concatenate((train_data, sv_data))
 x_train = np.concatenate((train_data, hu_data, sk_data, sv_data))
+# y_train = np.concatenate((train_labels, sv_labels))
 y_train = np.concatenate((train_labels, hu_labels, sk_labels, sv_labels))
 x_val = dev_data
 y_val = dev_labels
@@ -130,7 +132,7 @@ global_en_mic_tune = 0
 global_de_mic_tune = 0
 global_en_mac_tune = 0
 global_de_mac_tune = 0
-num_iterations = 5
+num_iterations = 10
 
 for i in range(num_iterations):
     print('training iteration:', i + 1)
@@ -149,7 +151,7 @@ for i in range(num_iterations):
     print(K.eval(model.optimizer.lr))
     es = EarlyStopping(monitor='val_loss', mode='auto', min_delta=0, patience=5, restore_best_weights=True, verbose=1)
     mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='auto', verbose=1, save_best_only=True)
-    history = model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=64, epochs=1000, shuffle=True, callbacks=[es, mc])
+    history = model.fit(x_train, y_train, validation_data=(x_val_de, y_val_de), batch_size=64, epochs=1000, shuffle=True, callbacks=[es, mc])
 
     gold_en = y_test
     predicted_en = model.predict(x_test).argmax(axis=1)
@@ -163,7 +165,7 @@ for i in range(num_iterations):
     global_de_mac_train += de_mac
 
     # de fine-tuning
-    FINETUNE = True
+    FINETUNE = False
     if FINETUNE:
         print('performing classical fine-tuning...')
         print('train:', de_train_dir)

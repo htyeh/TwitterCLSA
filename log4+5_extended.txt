@@ -1,0 +1,80 @@
+-------------------------------------------------------------------------------------------------------------------------------------------
+DE ZERO-SHOT IN A MULTILINGUAL SETTING
+-------------------------------------------------------------------------------------------------------------------------------------------
+** whether De dev is necessary in zero-shot training
+** whether to train on EN+3rd lang sequentially or jointly
+** sequential training: training step divided into EN-train & 3rd-lang-train
+** joint training: training step using EN+3rd lang
+
+<EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
+<DE> CLARIN.si 10% (CLARIN_small10) (train 970/2952/1365; dev 2078/6326/2923; test 2078/6326/2923)
+<SV> CLARIN 1500 (340 neg/620 neu/288 pos)
+EN-DE-HU-SK-SV MUSE
+
+< baseline (EN only) >
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      9       58.80    	    51.99    	    56.74    	    46.45
+-------------------------------------------------------------------------------------------------------------------------------------------
+< EN+SV sequential training, DE dev used in zero-shot > (log4)
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      10,1    55.11    	    54.86    	    50.40    	    47.92
+change          -3.7          +3            -6.3          +1.5
+
+< EN+ALL sequential training, DE dev used in zero-shot >
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      11,2    48.10        	52.99    	    43.33    	    49.42
+change          -10.7         +1            -13.4         +3
+-------------------------------------------------------------------------------------------------------------------------------------------
+< EN+SV sequential training, EN dev used in zero-shot >
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      9,1     54.37    	    53.63    	    50.05    	    47.94
+change          -4.4          +1.6          -6.7          +1.5
+
+< EN+ALL sequential training, EN dev used in zero-shot >
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      11,3    50.81    	    52.19    	    47.77    	    49.08
+change          -8            +0.2          -9            +2.6
+-------------------------------------------------------------------------------------------------------------------------------------------
+< EN+SV sequential training, SV dev used in zero-shot >
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      10,2    53.90    	    50.78    	    51.31    	    47.44
+change          -4.9          -1.2          -5.4          +1
+
+< EN+ALL sequential training, SV dev used in zero-shot >
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      9,2     45.42    	    47.37    	    42.52    	    46.81
+change          -13.4         -4.6          -14.2         +0.4
+-------------------------------------------------------------------------------------------------------------------------------------------
+< EN+SV joint training, DE dev used in zero-shot >
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      3       56.66    	    49.87    	    52.39    	    46.50
+change          -2.1          -2.1          -4.4          +0.1
+
+< EN+ALL joint training, DE dev used in zero-shot >
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      3       56.34    	    48.25    	    51.93    	    46.17
+change          -2.5          -3.7          -4.8          -0.3
+-------------------------------------------------------------------------------------------------------------------------------------------
+< EN+SV joint training, EN dev used in zero-shot > (log5)
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      11      58.88    	    49.44    	    56.64    	    46.39
+change          +0.1          -2.6          -0.1          -0.1
+
+< EN+ALL joint training, DE dev NOT used in zero-shot >
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      10      58.80     	  46.34    	    56.99    	    45.02
+change          0             -5.7          +0.3          -1.4
+-------------------------------------------------------------------------------------------------------------------------------------------
+< EN+SV joint training, SV dev used in zero-shot >
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      3       56.60    	    44.94    	    54.49    	    43.37
+change          -2.2          -7.1          -2.3          -3.1
+
+< EN+ALL joint training, SV dev used in zero-shot >
+setting epoch   F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
+Z2      3       56.06    	    43.15    	    54.24    	    42.59
+change          -2.7          -8.8          -2.5          -3.9
+
+< comments >
+** using De dev in zero-shot is better than using another dev set
+** sequential training on En, then a 3rd lang is better than joint training
