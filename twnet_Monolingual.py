@@ -17,9 +17,9 @@ import keras.backend as K
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
-de_train_dir = './TWEETS/CLEAN/ES_CLARIN_300/train'
-de_dev_dir = './TWEETS/CLEAN/ES_CLARIN_300/dev'
-de_test_dir = './TWEETS/CLEAN/ES_CLARIN_300/test'
+de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small2/train'
+de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
+de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
 train_texts, train_labels = utils.load_data(train_dir)
 dev_texts, dev_labels = utils.load_data(dev_dir)
 test_texts, test_labels = utils.load_data(test_dir)
@@ -104,10 +104,7 @@ print(x_test[:3])
 
 EMBEDDING_DIM = 100
 
-embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_ES.txt.w2v')
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/trained_2_sent140.txt')
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.840B.300d.txt', dim=EMBEDDING_DIM)
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.100d.txt', dim=EMBEDDING_DIM)
+embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
 
 embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
 
@@ -126,7 +123,7 @@ for i in range(num_iterations):
     # build model
     model = models.Sequential()
     # model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, input_length=MAXLEN))
-    model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=True, input_length=MAXLEN))
+    model.add(layers.Embedding(vocab_size, EMBEDDING_DIM, weights=[embedding_matrix], trainable=False, input_length=MAXLEN))
     # model.add(layers.Conv1D(128, 3, padding='valid', activation='relu'))
     # model.add(layers.MaxPooling1D())
     # model.add(layers.Flatten())

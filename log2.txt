@@ -90,6 +90,7 @@ Z1            30      128     0.2     2*64      -         64              1     
 setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
 M2            30      128     0.2     2*64      -         64              5         -             58.60         -             50.59
 Z2            30      128     0.2     2*64      -         64              10        63.44         56.97         61.50         50.85
+C2            30      128     0.2     2*64      -         64              ?         61.55    	    59.98    	    59.97    	    52.62
 
 < setting 3 >
 setting       MAXLEN  bilstm  dropout dense     dropouts  batch           epoch     F1-micro(En)  F1-micro(De)  F1-macro(En)  F1-macro(De)
@@ -479,3 +480,19 @@ tune-LR=e-4
 filtered vocab absent from corpus       ZM      12    63.33     56.01     61.44     44.07
 tune-bat.=512, eval. on 359 tweets
 tune-LR=e-4, tune-task=binary
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+OVERFITTING + ABLATION STUDY: CLARIN DE - SCALED
+-------------------------------------------------------------------------------------------------------------------------------------------
+** a comparison between <C2 - En full + De scaled> vs <M2 - De scaled>
+** plot C2-macro, M2-macro, Z2-macro
+** plot C2-micro, M2-micro, Z2-micro
+
+De-ratio  De-size   C2-De-macro   M2-De-macro   |   C2-De-micro   M2-De-micro
+100%      52862     54.18         54.13             60.04         59.49
+50%       26432     51.90         50.02             56.96         56.41
+20%       10572     52.62         50.59             59.98         58.60
+10%       5287      51.87         50.70             60.03         56.94
+5%        2643      49.72         46.31             54.73         52.52
+2%        1057      47.94         25.45             56.50         55.47
+0.5%      264       48.32         23.89             59.26         55.85

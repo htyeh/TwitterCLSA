@@ -1,0 +1,28 @@
+Summary of multilingual experiments
+
+Two target languages are chosen, each using different other languages for external signals
+  - De, adding Hu, Sk, Sv
+  - Es, adding It, Pt
+
+For De, Hu, Sk and Sv, a set of "normal sized" experiments and another set of "small sized" experiments are performed
+  - normal: uses ~5000 De and ~1500 Hu/Sk/Sv each
+  - small: uses ~300 De/Hu/Sk/Sv each
+
+Four configurations of multilingual zero-shot
+  - sequential + no De dev set
+  - sequential + use De dev set
+  - joint + no De dev set
+  - joint + use De dev set
+  * "sequential" seperates zero-shot into two training sessions, first with En and then with external langs; "joint" means En and external langs are merged for training; "no De dev" or "use De dev" indicates whether a De dev set or another dev set is used during zero-shot training
+  - findings are that sequential training is better than joint training and using a De dev set is better than other dev sets (En and Sv dev sets are used for comparison)
+  - concretely: "sequential" + De or En dev set increases De zero-shot scores; "sequential" + Sv dev set increases De zero-shot macro slightly while decreasing De zero-shot micro; "joint" decreases De zero-shot scores in all settings
+
+Multilingual for Spanish
+  - For Es only a set of "small sized" experiments are performed, using ~300 Es/It/Pt each
+  - External langs either used after En traning (sequential + Es dev set) or merged with En during training (joint + En dev set)
+  - Both settings decreases Es micro and increases Es macro
+
+A multilingual classifier
+  - ~35000 En and ~300 each of all the 7 other langs are used to train a classifier for all 8 langs
+  - 7 langs are added one by one to tune the classifier trained on En
+  - scores for almost all langs increase consistantly for each additional language added

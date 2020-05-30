@@ -21,7 +21,7 @@ SB-10K: link: https://www.spinningbytes.com/resources/germansentiment/
 <DE> SB-10k balanced (989 neg/1500 neu/1509 pos)
 >Train/Dev/Test split: 70/15/15
 
->Tweet cleansing
+>Tweet cleansing + Data processing
 1) removed repeating and 'Not Available' ones
 2) contractions/elongated words are kept (own embeddings)
 3) hashtags kept (might contain sentiment info)
@@ -31,6 +31,8 @@ SB-10K: link: https://www.spinningbytes.com/resources/germansentiment/
 https://towardsdatascience.com/twitter-sentiment-analysis-using-fasttext-9ccd04465597
 7) punctuation removal
 8) converted \u2019 (to '), \u002c (to ,)
+9) tokenizer transformation
+10) padding
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 COMPLETE EXPERIMENT DESCRIPTION

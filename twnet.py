@@ -17,9 +17,9 @@ import keras.backend as K
 train_dir = './TWEETS/CLEAN/EN_CLARIN_full/train'
 dev_dir = './TWEETS/CLEAN/EN_CLARIN_full/dev'
 test_dir = './TWEETS/CLEAN/EN_CLARIN_full/test'
-de_train_dir = './TWEETS/CLEAN/ES_CLARIN_300/train'
-de_dev_dir = './TWEETS/CLEAN/ES_CLARIN_300/dev'
-de_test_dir = './TWEETS/CLEAN/ES_CLARIN_300/test'
+de_train_dir = './TWEETS/CLEAN/DE_CLARIN_small2/train'
+de_dev_dir = './TWEETS/CLEAN/DE_CLARIN_full/dev'
+de_test_dir = './TWEETS/CLEAN/DE_CLARIN_full/test'
 train_texts, train_labels = utils.load_data(train_dir)
 dev_texts, dev_labels = utils.load_data(dev_dir)
 test_texts, test_labels = utils.load_data(test_dir)
@@ -102,12 +102,12 @@ y_test_de = de_test_labels
 print(x_train[:3])
 print(x_test[:3])
 
-EMBEDDING_DIM = 300
+EMBEDDING_DIM = 100
 
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
+embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_ES.txt.w2v')
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE_HU_SK_SV.txt', dim=300)
-embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_ES_IT_PT.txt', dim=300)
+# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_ES_IT_PT.txt', dim=300)
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.840B.300d.txt', dim=EMBEDDING_DIM)
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.100d.txt', dim=EMBEDDING_DIM)
 
@@ -121,7 +121,7 @@ global_en_mic_tune = 0
 global_de_mic_tune = 0
 global_en_mac_tune = 0
 global_de_mac_tune = 0
-num_iterations = 10
+num_iterations = 8
 
 for i in range(num_iterations):
     print('training iteration:', i + 1)
