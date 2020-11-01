@@ -102,14 +102,12 @@ y_test_de = de_test_labels
 print(x_train[:3])
 print(x_test[:3])
 
-EMBEDDING_DIM = 100
+EMBEDDING_DIM = 200
 
-embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
+# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE.txt.w2v')
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_ES.txt.w2v')
 # embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_DE_HU_SK_SV.txt', dim=300)
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/EN_ES_IT_PT.txt', dim=300)
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.840B.300d.txt', dim=EMBEDDING_DIM)
-# embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.100d.txt', dim=EMBEDDING_DIM)
+embeddings_index = utils.load_embs_2_dict('EMBEDDINGS/glove.twitter.27B.200d.txt', dim=EMBEDDING_DIM)
 
 embedding_matrix = utils.build_emb_matrix(num_embedding_vocab=vocab_size, embedding_dim=EMBEDDING_DIM, word_index=tokenizer.word_index, embeddings_index=embeddings_index)
 
@@ -162,7 +160,7 @@ for i in range(num_iterations):
     global_de_mac_train += de_mac
 
     # de fine-tuning
-    FINETUNE = True
+    FINETUNE = False
     if FINETUNE:
         print('performing classical fine-tuning...')
         print('train:', de_train_dir)

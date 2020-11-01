@@ -233,6 +233,6 @@ C2              -3.4          +0.8          -5.3          +0.8
 -------------------------------------------------------------------------------------------------------------------------------------------
 COMMENTS ON MULTILINGUAL EXPERIMENTS WITH ES
 -------------------------------------------------------------------------------------------------------------------------------------------
-** if multilingual data used in tune-step, same issues of catastrophic forgetting for En is observed, these effects are however less obvious after fine-tuning
+** if multilingual data used in tune-step, same issues of catastrophic forgetting for En is observed, these effects are however less obvious after fine-tuning (in cases of add-Pt and add-all, they do not repair as well as in the De case)
 ** if multilingual data used in train-step, En scores actually constantly impove after fine-tuning with Es, by up to 8%
 ** Es scores are improved by about 1-1.5% by using multilingual data in train or tune steps

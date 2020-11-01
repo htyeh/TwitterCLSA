@@ -1,22 +1,6 @@
 -------------------------------------------------------------------------------------------------------------------------------------------
 NOTES
 -------------------------------------------------------------------------------------------------------------------------------------------
-< fine-tuning >
-** fine-tuning: try full De / downsized De training
-** twnet_en trains with en / twnet_de trains with de / evaluation done with twnet_de
-** Tokenizer from twnet_en saved with pickle / refitting Tokenizer in twnet_de would result in diff. indices and scores
-** dumping with pickle preferred over json for simpler implementation and storage (about 6M vs 17M)
-** Tokenizer is fit on all De train/dev/test in twnet_en so that in twnet_de all De vocab can be allocated embs
-
-< steps of training + tuning >
-** twnet_en: Tokenizer is fit on EN train/dev/test + DE train/dev/test
-** model trained/val. on EN, record scores on EN and DE, save best model
-** scores recorded under step "train" can be understood as zero-shot performance
-** twnet_de: load best model, restore Tokenizer from pickle
-** model trained/val. on DE, record scores on EN and DE, save best model
-** scores recorded under step "tune" can be understood as fine-tuned performance
-** twnet_final_check loads the final model and checks all scores
-
 < EmbEnhancer >
 ** when embs are updated, their weights are optimized after only 1 epoch, this can cause the rest of the model to be undertrained
 ** alternative 1 (EmbEnhancer): update embs, load model to train architecture further
@@ -33,8 +17,19 @@ NOTES
 ** in classical transfer settings: De data used to first tune architecture, then embs, same as for En
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-PICKLE
+PICKLE (OUTDATED)
 -------------------------------------------------------------------------------------------------------------------------------------------
+** dumping with pickle preferred over json for simpler implementation and storage (about 6M vs 17M)
+** Tokenizer is fit on all De train/dev/test in twnet_en so that in twnet_de all De vocab can be allocated embs
+< fine-tuning >
+** twnet_en: Tokenizer is fit on EN train/dev/test + DE train/dev/test
+** model trained/val. on EN, record scores on EN and DE, save best model
+** scores recorded under step "train" can be understood as zero-shot performance
+** twnet_de: load best model, restore Tokenizer from pickle
+** model trained/val. on DE, record scores on EN and DE, save best model
+** scores recorded under step "tune" can be understood as fine-tuned performance
+** twnet_final_check loads the final model and checks all scores
+
 <model 1: Tokenizer on EN CLARIN train/dev/test and DE CLARIN test, setting=Z1>
 <model 2: Tokenizer=loaded pickle from model 1>
 <model 3: Tokenizer=loaded pickle from model 1>
@@ -187,7 +182,7 @@ C2      e-6     30      128     0.2     2*64      -         64    1     62.15   
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-HYPERPARAM. SEARCH FOR EMB/ARCH JOINT OPTIMIZATION
+HYPERPARAM. SEARCH FOR EMB/ARCH DISJOINT OPTIMIZATION
 -------------------------------------------------------------------------------------------------------------------------------------------
 LaTex: Yes
 < effect of LR on optimizing embeddings >
@@ -401,7 +396,7 @@ setting LR(arch)  LR(emb)       epo(arch,emb)                       En-micro  De
 ATTENTION
 -------------------------------------------------------------------------------------------------------------------------------------------
 https://pypi.org/project/keras-self-attention/
-LaTex: No
+In thesis: Yes
 
 setting   attention   LR(arch)  LR(emb) epo-en  epo-de    En-micro  De-micro  En-macro  De-macro
 Arch.C3   none        0.001     e-4     9,2     -,-       64.34     55.94     63.05     50.25
@@ -446,7 +441,7 @@ LaTex: No
 -------------------------------------------------------------------------------------------------------------------------------------------
 TRIALS WITH DIFFERENT EMBEDDINGS
 -------------------------------------------------------------------------------------------------------------------------------------------
-LaTex: No
+In thesis: Yes
 
 <EN> CLARIN.si full (train 8696/16590/9415; dev 1863/3555/2019; test 1863/3555/2019)
 <DE> CLARIN full test (2078 neg/6326 neu/2923 pos)
@@ -456,7 +451,9 @@ LaTex: No
 none, 100-dim                           Z1      1     60.99     54.78     59.21     32.43
 (FastText) Collados(En), 100-dim        ZM      10    63.19     54.08     61.53     41.57
 GloVe Twitter27B, 100-dim               ZM      5     63.02     57.90     61.01     38.53     De neu-skewed
+GloVe Twitter27B, 100-dim               ZM      5     63.11     57.91     61.35     38.86     new results
 GloVe Twitter27B, 200-dim               ZM      3     62.90     58.41     61.41     36.58     De neu-skewed
+GloVe Twitter27B, 200-dim               ZM      3     63.17     57.92     61.63     37.28     new results
 GloVe CommonCrawl42B, 300-dim           ZM      3     62.78     49.80     61.43     40.59
 GloVe CommonCrawl840B, 300-dim          ZM      3     63.12     53.62     61.36     41.22
 
@@ -464,7 +461,7 @@ GloVe CommonCrawl840B, 300-dim          ZM      3     63.12     53.62     61.36 
 -------------------------------------------------------------------------------------------------------------------------------------------
 SENTIMENT EMBEDDINGS TUNED WITH SENT140
 -------------------------------------------------------------------------------------------------------------------------------------------
-LaTex: No
+In thesis: No
 
                                         setting epoch En-micro  De-micro  En-macro  De-macro
 baseline (Z2)                           Z2      10    63.44     56.97     61.50     50.85
